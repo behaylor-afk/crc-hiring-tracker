@@ -527,7 +527,7 @@ select.form-control{cursor:pointer}
 
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────────────────
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw-GSWkOrZXoOCk6perQt9jfEYrSQDUKfWzFmKpfN54n8jxHYp0AneCCPkhfVCNbv5LsA/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw1hnsvRwg9MwUqaLxpke6N93BjQ8v6diqF59k4gIPCUa6Awcsohnp-HOnRPR7AXXyD1Q/exec';
 
 const USERS = {
   matt:   'Matt Glover',
@@ -1109,9 +1109,19 @@ function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 function fmtDate(d) {
-  if (!d) return '';
-  const m = String(d).match(/(\d{4})-(\d{2})-(\d{2})/);
-  return m ? `${parseInt(m[2])}/${parseInt(m[3])}/${m[1].slice(2)}` : d;
+  if (!d || d === '') return '';
+  const s = String(d).trim();
+  // ISO format: 2026-05-08
+  const iso = s.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return `${parseInt(iso[2])}/${parseInt(iso[3])}/${iso[1].slice(2)}`;
+  // Any other parseable date string (fallback for legacy data)
+  try {
+    const dt = new Date(s);
+    if (!isNaN(dt.getTime())) {
+      return `${dt.getMonth()+1}/${dt.getDate()}/${String(dt.getFullYear()).slice(2)}`;
+    }
+  } catch(e) {}
+  return '';
 }
 </script>
 </body>
