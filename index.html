@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Castlereagh Hiring Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F7F5F9;--surface:#fff;--surface-2:#F3F0F7;--border:#E2DCF0;
+  --text:#1E1428;--text-2:#6B5F80;--text-3:#A699B8;
+  --accent:#52307C;--accent-mid:#7B4FB5;--accent-light:#EDE8F5;
+  --lavender:#A67DC5;--lavender-light:#F3EDF9;
+  --sage:#6B9178;--sage-dark:#3D6B5E;--sage-light:#EBF3EE;
+  --amber:#B07D2A;--amber-light:#FDF4E3;
+  --red:#C0392B;--red-light:#FDEEEC;--green-light:#E8F2EE;
+  --radius:10px;
+  --shadow:0 1px 3px rgba(82,48,124,.08),0 1px 2px rgba(82,48,124,.04);
+  --shadow-md:0 4px 16px rgba(82,48,124,.12);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;min-height:100vh}
+
+/* ── NAV ── */
+.nav{background:var(--surface);border-bottom:2px solid var(--border);padding:0 20px;display:flex;align-items:center;height:60px;position:sticky;top:0;z-index:200;box-shadow:0 2px 12px rgba(82,48,124,.07)}
+.nav-brand{display:flex;align-items:center;gap:9px;margin-right:24px;flex-shrink:0}
+.nav-logo{height:40px;width:40px;object-fit:contain;border-radius:50%}
+.nav-brand-name{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:700;color:var(--accent);display:block;line-height:1.1}
+.nav-brand-sub{font-size:10px;font-weight:500;color:var(--lavender);letter-spacing:.3px;text-transform:uppercase;display:block}
+.nav-tabs{display:flex;align-items:center;height:100%;flex:1;gap:0}
+.nav-tab{height:100%;padding:0 15px;display:flex;align-items:center;font-size:13px;font-weight:500;color:var(--text-2);cursor:pointer;border-bottom:3px solid transparent;border-top:none;border-left:none;border-right:none;background:none;font-family:inherit;white-space:nowrap;transition:color .15s}
+.nav-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+.nav-tab:hover:not(.active){color:var(--accent)}
+.nav-user{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:500;color:var(--text-2);background:var(--accent-light);border:1px solid var(--border);border-radius:20px;padding:4px 12px 4px 7px;white-space:nowrap}
+.nav-avatar{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--lavender));color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
+
+/* ── LAYOUT ── */
+.main{padding:24px 20px;max-width:1200px;margin:0 auto}
+.page{display:none}.page.visible{display:block}
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;gap:12px}
+.page-title{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;color:var(--accent)}
+.page-sub{font-size:13px;color:var(--text-2);margin-top:2px}
+.header-actions{display:flex;gap:8px;flex-shrink:0}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;border:none;transition:all .15s}
+.btn-primary{background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(82,48,124,.2)}
+.btn-primary:hover{background:var(--accent-mid)}
+.btn-primary:disabled{background:var(--text-3);box-shadow:none;cursor:not-allowed}
+.btn-ghost{background:transparent;color:var(--text-2);border:1px solid var(--border)}
+.btn-ghost:hover{background:var(--accent-light);color:var(--accent);border-color:var(--accent)}
+.btn-sm{padding:5px 12px;font-size:12px}
+.action-btn{background:none;border:1px solid var(--border);border-radius:6px;padding:4px 9px;font-size:11px;font-weight:600;color:var(--text-2);cursor:pointer;font-family:inherit;transition:all .15s}
+.action-btn:hover{background:var(--accent-light);color:var(--accent);border-color:var(--accent)}
+.action-btn-danger{color:var(--red);border-color:#F5C6C2}.action-btn-danger:hover{background:var(--red-light);color:var(--red);border-color:var(--red)}
+
+/* ── STATS ── */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+.stat-card.amber{border-left-color:var(--amber)}.stat-card.sage{border-left-color:var(--sage)}.stat-card.lavender{border-left-color:var(--lavender)}
+.stat-label{font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.7px}
+.stat-value{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:700;color:var(--accent);line-height:1;margin-top:2px}
+.stat-value.amber{color:var(--amber)}.stat-value.sage{color:var(--sage-dark)}.stat-value.lavender{color:var(--lavender)}
+.stat-sub{font-size:11px;color:var(--text-3);margin-top:4px}
+
+/* ── CARD + TABLE ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.card-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface-2)}
+.card-title{font-size:13px;font-weight:600;color:var(--accent)}
+table{width:100%;border-collapse:collapse}
+th{padding:9px 13px;text-align:left;font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);background:var(--surface-2);white-space:nowrap}
+td{padding:10px 13px;font-size:13px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--lavender-light)}
+.empty-state{text-align:center;padding:40px;color:var(--text-3);font-size:13px}
+
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+.b-hold{background:var(--amber-light);color:var(--amber)}
+.b-hired{background:var(--green-light);color:var(--sage-dark)}
+.b-active{background:var(--accent-light);color:var(--accent)}
+.b-new{background:var(--accent-light);color:var(--accent)}
+.b-ongoing{background:var(--sage-light);color:var(--sage-dark)}
+.b-qualified{background:var(--green-light);color:var(--sage-dark)}
+.b-unqualified{background:var(--red-light);color:var(--red)}
+.s-badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600}
+.s-resume{background:#F3F0F7;color:var(--text-2)}
+.s-phone{background:var(--sage-light);color:var(--sage-dark)}
+.s-interview{background:#FFF7ED;color:#C2410C}
+.s-offer{background:var(--lavender-light);color:var(--accent-mid)}
+.s-written{background:#EEF2FF;color:#4338CA}
+.s-accepted{background:var(--green-light);color:var(--sage-dark)}
+.s-declined{background:var(--red-light);color:var(--red)}
+.mono{font-family:'DM Mono',monospace;font-size:11px;color:var(--text-2)}
+
+/* ── FILTERS ── */
+.filter-row{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.filter-pills{display:flex;gap:5px;flex-wrap:wrap}
+.pill{padding:4px 11px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:#fff;color:var(--text-2);font-family:inherit;transition:all .15s}
+.pill.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.pill:hover:not(.active){background:var(--accent-light);color:var(--accent);border-color:var(--accent)}
+.search-box{padding:6px 10px;border:1px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;color:var(--text);background:var(--surface-2);outline:none;width:180px}
+.search-box:focus{border-color:var(--accent)}
+
+/* ── PIPELINE ── */
+.pipeline-stages{display:flex;margin-bottom:20px;border-radius:10px;overflow:hidden;box-shadow:var(--shadow)}
+.p-stage{flex:1;text-align:center;padding:12px 6px;background:var(--surface);border-right:1px solid var(--border);cursor:pointer;transition:background .15s}
+.p-stage:last-child{border-right:none}
+.p-stage:hover{background:var(--lavender-light)}
+.p-stage.active{background:linear-gradient(135deg,var(--accent-light),var(--lavender-light))}
+.p-stage.active .p-count{color:var(--accent)}
+.p-count{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;color:var(--text)}
+.p-label{font-size:10px;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:.3px;margin-top:2px}
+
+/* ── MODAL ── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(30,20,40,.45);z-index:500;align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto}
+.overlay.open{display:flex}
+.modal{background:#fff;border-radius:14px;box-shadow:var(--shadow-md);width:100%;max-width:680px;animation:slideIn .2s ease}
+@keyframes slideIn{from{transform:translateY(-16px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border)}
+.modal-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;color:var(--accent)}
+.modal-close{background:none;border:none;font-size:20px;color:var(--text-3);cursor:pointer;line-height:1;padding:2px 6px;border-radius:4px}
+.modal-close:hover{background:var(--surface-2);color:var(--text)}
+.modal-body{padding:20px 22px}
+.modal-footer{padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+
+/* ── FORMS ── */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-group.full{grid-column:1/-1}
+.form-label{font-size:10px;font-weight:700;color:var(--text-2);text-transform:uppercase;letter-spacing:.5px}
+.form-control{padding:8px 10px;border:1px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;color:var(--text);background:var(--surface-2);outline:none;transition:border-color .15s}
+.form-control:focus{border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px rgba(82,48,124,.08)}
+.section-divider{font-size:10px;font-weight:700;color:var(--sage-dark);text-transform:uppercase;letter-spacing:.7px;margin:18px 0 12px;padding-top:16px;border-top:1px solid var(--border)}
+.section-divider:first-child{margin-top:0;border-top:none;padding-top:0}
+
+/* ── MASS ADD ── */
+.mass-add-box{background:var(--surface);border:2px dashed var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+.mass-add-box:focus-within{border-color:var(--accent)}
+.paste-area{width:100%;min-height:120px;border:none;background:transparent;font-family:'DM Mono',monospace;font-size:13px;color:var(--text);outline:none;resize:vertical;line-height:1.6}
+.paste-hint{font-size:11px;color:var(--text-3);margin-top:6px}
+.preview-table-wrap{margin-top:16px}
+.preview-row{display:grid;grid-template-columns:1fr 1fr 36px;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)}
+.preview-row:last-child{border-bottom:none}
+.preview-row input{padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;outline:none;background:var(--surface-2)}
+.preview-row input:focus{border-color:var(--accent)}
+.preview-remove{background:none;border:none;color:var(--text-3);cursor:pointer;font-size:16px;padding:2px 4px;border-radius:4px;line-height:1}
+.preview-remove:hover{color:var(--red);background:var(--red-light)}
+.preview-header{display:grid;grid-template-columns:1fr 1fr 36px;gap:8px;padding:0 0 6px;font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);margin-bottom:4px}
+.mass-config{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;margin-bottom:20px}
+.count-badge{display:inline-flex;align-items:center;justify-content:center;background:var(--accent);color:#fff;border-radius:20px;padding:2px 10px;font-size:12px;font-weight:700;margin-left:8px}
+
+/* ── ADMIN ── */
+.admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.admin-right{display:flex;flex-direction:column;gap:16px}
+.add-setting-row{display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--border);background:var(--surface-2)}
+.add-setting-row input{flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;outline:none}
+.add-setting-row input:focus{border-color:var(--accent)}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;right:24px;background:#1E1428;color:#fff;padding:12px 18px;border-radius:10px;font-size:13px;font-weight:500;z-index:999;transform:translateY(80px);opacity:0;transition:all .3s;pointer-events:none;max-width:320px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{background:var(--sage-dark)}.toast.error{background:var(--red)}
+
+/* ── SETUP SCREEN ── */
+.setup-screen{text-align:center;padding:80px 20px}
+.setup-screen h2{font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--accent);margin-bottom:12px}
+.setup-screen p{color:var(--text-2);font-size:14px;line-height:1.6;max-width:480px;margin:0 auto 8px}
+.setup-screen code{background:var(--surface-2);border:1px solid var(--border);border-radius:5px;padding:2px 7px;font-family:'DM Mono',monospace;font-size:12px}
+
+/* ── LOADING ── */
+.loading{display:flex;align-items:center;justify-content:center;padding:60px;gap:10px;color:var(--text-3)}
+.spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── MISC ── */
+.cname{font-weight:600;font-size:13px}.cloc{font-size:11px;color:var(--text-3);margin-top:1px}
+select.form-control{cursor:pointer}
+.no-user{display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center;padding:20px}
+.no-user-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:40px;max-width:440px;box-shadow:var(--shadow-md)}
+.no-user-card h2{font-family:'Cormorant Garamond',serif;font-size:24px;color:var(--accent);margin-bottom:12px}
+.no-user-card p{color:var(--text-2);font-size:14px;line-height:1.6}
+.url-example{background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-top:14px;font-family:'DM Mono',monospace;font-size:12px;color:var(--text);text-align:left}
+</style>
+</head>
+<body>
+
+<!-- NO USER SCREEN -->
+<div id="no-user" class="no-user" style="display:none">
+  <div class="no-user-card">
+    <img src="data:image/jpeg;base64,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" style="width:64px;height:64px;object-fit:contain;border-radius:50%;margin-bottom:16px" alt="Logo">
+    <h2>Castlereagh Hiring Tracker</h2>
+    <p>Please open the app using your personal link:</p>
+    <div class="url-example">
+      ?user=matt &nbsp;&nbsp;→&nbsp; Matt Glover<br>
+      ?user=amanda →&nbsp; Amanda O'Dell
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP (hidden until user resolved) -->
+<div id="app" style="display:none">
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-brand">
+    <img class="nav-logo" src="data:image/jpeg;base64,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" alt="Logo">
+    <div>
+      <span class="nav-brand-name">Castlereagh</span>
+      <span class="nav-brand-sub">Hiring Tracker</span>
+    </div>
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('jobs',this)">Job Openings</button>
+    <button class="nav-tab" onclick="showPage('candidates',this)">Candidates</button>
+    <button class="nav-tab" onclick="showPage('massadd',this)">Mass Add</button>
+    <button class="nav-tab" onclick="showPage('admin',this)">Admin</button>
+  </div>
+  <div class="nav-user">
+    <div class="nav-avatar" id="nav-initials">?</div>
+    <span id="nav-name">—</span>
+  </div>
+</nav>
+
+<!-- ═══ JOB OPENINGS ═══ -->
+<div id="page-jobs" class="page visible">
+  <div class="main">
+    <div class="page-header">
+      <div><div class="page-title">Job Openings</div><div class="page-sub">Active requisitions across all locations</div></div>
+      <div class="header-actions">
+        <button class="btn btn-primary" onclick="openJobModal()">+ Add Opening</button>
+      </div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-label">Total Openings</div><div class="stat-value" id="stat-total">—</div><div class="stat-sub" id="stat-total-sub">Loading…</div></div>
+      <div class="stat-card amber"><div class="stat-label">On Hold</div><div class="stat-value amber" id="stat-hold">—</div><div class="stat-sub">Pending action</div></div>
+      <div class="stat-card sage"><div class="stat-label">Hired</div><div class="stat-value sage" id="stat-hired">—</div><div class="stat-sub">Positions filled</div></div>
+      <div class="stat-card lavender"><div class="stat-label">New Facilities</div><div class="stat-value lavender" id="stat-new">—</div><div class="stat-sub" id="stat-new-sub">—</div></div>
+    </div>
+    <div class="filter-row">
+      <div class="filter-pills" id="job-status-pills">
+        <button class="pill active" onclick="filterJobs('status','all',this)">All</button>
+        <button class="pill" onclick="filterJobs('status','Hold',this)">On Hold</button>
+        <button class="pill" onclick="filterJobs('status','Active',this)">Active</button>
+        <button class="pill" onclick="filterJobs('status','Hired',this)">Hired</button>
+      </div>
+      <select class="form-control" style="font-size:12px;padding:5px 10px;width:auto" id="job-loc-filter" onchange="filterJobs('location',this.value)">
+        <option value="all">All Locations</option>
+      </select>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Requisitions</span><span id="job-count" style="font-size:12px;color:var(--text-3)"></span></div>
+      <div id="jobs-table-body"><div class="loading"><div class="spinner"></div> Loading…</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CANDIDATES ═══ -->
+<div id="page-candidates" class="page">
+  <div class="main">
+    <div class="page-header">
+      <div><div class="page-title">Candidate Tracker</div><div class="page-sub">Full pipeline from resume to offer</div></div>
+      <div class="header-actions">
+        <button class="btn btn-primary" onclick="openCandidateModal()">+ Add Candidate</button>
+      </div>
+    </div>
+    <div class="pipeline-stages" id="pipeline-bar"></div>
+    <div class="filter-row">
+      <div class="filter-pills" id="cand-screen-pills">
+        <button class="pill active" onclick="filterCands('screen','all',this)">All</button>
+        <button class="pill" onclick="filterCands('screen','Qualified',this)">Qualified</button>
+        <button class="pill" onclick="filterCands('screen','Unqualified',this)">Unqualified</button>
+      </div>
+      <select class="form-control" style="font-size:12px;padding:5px 10px;width:auto" id="cand-pos-filter" onchange="filterCands('position',this.value)">
+        <option value="all">All Positions</option>
+      </select>
+      <select class="form-control" style="font-size:12px;padding:5px 10px;width:auto" id="cand-loc-filter" onchange="filterCands('location',this.value)">
+        <option value="all">All Locations</option>
+      </select>
+      <input class="search-box" placeholder="Search name…" oninput="filterCands('query',this.value)" id="cand-search">
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Candidates</span><span id="cand-count" style="font-size:12px;color:var(--text-3)"></span></div>
+      <div id="cands-table-body"><div class="loading"><div class="spinner"></div> Loading…</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MASS ADD ═══ -->
+<div id="page-massadd" class="page">
+  <div class="main">
+    <div class="page-header">
+      <div><div class="page-title">Mass Add Candidates</div><div class="page-sub">Paste names &amp; phone numbers from an Indeed download</div></div>
+    </div>
+
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header"><span class="card-title">Position &amp; Source</span></div>
+      <div style="padding:18px 18px 0">
+        <div class="mass-config">
+          <div class="form-group">
+            <label class="form-label">Job Opening *</label>
+            <select class="form-control" id="mass-job">
+              <option value="">— Select —</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Location</label>
+            <input class="form-control" id="mass-location" readonly style="background:var(--surface-2);color:var(--text-3)">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Source</label>
+            <select class="form-control" id="mass-source">
+              <option value="Indeed">Indeed</option>
+              <option value="Employee Referral">Employee Referral</option>
+              <option value="LinkedIn">LinkedIn</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Resume Received</label>
+            <input type="date" class="form-control" id="mass-date">
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:0 18px 18px">
+        <div class="form-label" style="margin-bottom:8px">Paste from Excel — two columns: Name &nbsp;|&nbsp; Phone</div>
+        <div class="mass-add-box">
+          <textarea class="paste-area" id="paste-area" placeholder="Copy the Name and Phone Number columns from your Indeed download, then paste here. Each row = one candidate.&#10;&#10;Example:&#10;Jane Smith    +1 216 555 1234&#10;John Doe      +1 440 555 5678"></textarea>
+          <div class="paste-hint">Tab-separated (copied from Excel/Google Sheets) or one name per line also works.</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="parsePaste()" style="margin-bottom:12px">↓ Parse Paste</button>
+
+        <div id="preview-section" style="display:none">
+          <div style="display:flex;align-items:center;margin-bottom:10px">
+            <span style="font-size:13px;font-weight:600;color:var(--text)">Preview</span>
+            <span class="count-badge" id="preview-count">0</span>
+            <button class="btn btn-ghost btn-sm" onclick="addPreviewRow()" style="margin-left:auto">+ Add Row</button>
+          </div>
+          <div class="preview-header"><span>Full Name</span><span>Phone Number</span><span></span></div>
+          <div id="preview-rows"></div>
+          <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end">
+            <button class="btn btn-ghost" onclick="clearMassAdd()">Clear</button>
+            <button class="btn btn-primary" id="mass-submit-btn" onclick="submitMassAdd()">Add Candidates</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ADMIN ═══ -->
+<div id="page-admin" class="page">
+  <div class="main">
+    <div class="page-header">
+      <div><div class="page-title">Admin</div><div class="page-sub">Manage dropdown lists used throughout the app</div></div>
+    </div>
+    <div class="admin-grid">
+      <div class="card" id="admin-locations-card"></div>
+      <div class="admin-right">
+        <div class="card" id="admin-positions-card"></div>
+        <div class="card" id="admin-sources-card"></div>
+        <div class="card" id="admin-types-card"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end #app -->
+
+<!-- ═══ JOB MODAL ═══ -->
+<div class="overlay" id="job-overlay" onclick="overlayClick(event,'job-overlay')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title" id="job-modal-title">New Job Opening</div>
+      <button class="modal-close" onclick="closeModal('job-overlay')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="job-id">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Position Title *</label>
+          <select class="form-control" id="job-position"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Location *</label>
+          <select class="form-control" id="job-location"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Opening Type</label>
+          <select class="form-control" id="job-type"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select class="form-control" id="job-status">
+            <option value="Hold">Hold</option>
+            <option value="Active">Active</option>
+            <option value="Hired">Hired</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Requisition Date</label>
+          <input type="date" class="form-control" id="job-req-date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Target Start Date</label>
+          <input type="date" class="form-control" id="job-start-date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date Posted to Indeed</label>
+          <input type="date" class="form-control" id="job-indeed-date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date Posted to LinkedIn</label>
+          <input type="date" class="form-control" id="job-linkedin-date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date Filled</label>
+          <input type="date" class="form-control" id="job-filled-date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Person Hired</label>
+          <input type="text" class="form-control" id="job-person-hired" placeholder="Name of hire">
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Comments</label>
+          <input type="text" class="form-control" id="job-comments" placeholder="Optional notes">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('job-overlay')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveJob()">Save Opening</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CANDIDATE MODAL ═══ -->
+<div class="overlay" id="cand-overlay" onclick="overlayClick(event,'cand-overlay')">
+  <div class="modal" style="max-width:740px" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title" id="cand-modal-title">Add Candidate</div>
+      <button class="modal-close" onclick="closeModal('cand-overlay')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="cand-id">
+      <div class="section-divider">Candidate Info</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Full Name *</label>
+          <input type="text" class="form-control" id="cand-name" placeholder="First Last">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone Number</label>
+          <input type="tel" class="form-control" id="cand-phone" placeholder="+1 000 000 0000">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Position *</label>
+          <select class="form-control" id="cand-position"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Location</label>
+          <select class="form-control" id="cand-location"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Source</label>
+          <select class="form-control" id="cand-source"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Current Stage</label>
+          <select class="form-control" id="cand-stage">
+            <option>Resume Review</option>
+            <option>Phone Screen</option>
+            <option>1st Interview</option>
+            <option>Verbal Offer</option>
+            <option>Written Offer</option>
+            <option>Offer Accepted</option>
+            <option>Offer Declined</option>
+            <option>Withdrawn</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Resume Received</label>
+          <input type="date" class="form-control" id="cand-resume-date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Resume Screen Result</label>
+          <select class="form-control" id="cand-screen">
+            <option value="">—</option>
+            <option>Qualified</option>
+            <option>Unqualified</option>
+          </select>
+        </div>
+      </div>
+      <div class="section-divider">Pipeline Dates &amp; Results</div>
+      <div class="form-grid-3">
+        <div class="form-group"><label class="form-label">Contact Attempt Date</label><input type="date" class="form-control" id="cand-contact-date"></div>
+        <div class="form-group"><label class="form-label">Contact Result</label><select class="form-control" id="cand-contact-result"><option value="">—</option><option>Reached</option><option>No Answer</option><option>Left Voicemail</option></select></div>
+        <div class="form-group"></div>
+        <div class="form-group"><label class="form-label">Phone Screen Date</label><input type="date" class="form-control" id="cand-phone-date"></div>
+        <div class="form-group"><label class="form-label">Phone Screen Result</label><select class="form-control" id="cand-phone-result"><option value="">—</option><option>Pass</option><option>Fail</option></select></div>
+        <div class="form-group"></div>
+        <div class="form-group"><label class="form-label">1st Interview Date</label><input type="date" class="form-control" id="cand-int-date"></div>
+        <div class="form-group"><label class="form-label">Interview Result</label><select class="form-control" id="cand-int-result"><option value="">—</option><option>Pass</option><option>Fail</option></select></div>
+        <div class="form-group"></div>
+        <div class="form-group"><label class="form-label">Verbal Offer Date</label><input type="date" class="form-control" id="cand-verbal-date"></div>
+        <div class="form-group"><label class="form-label">Written Offer Sent</label><input type="date" class="form-control" id="cand-written-date"></div>
+        <div class="form-group"><label class="form-label">Offer Decision Date</label><input type="date" class="form-control" id="cand-decision-date"></div>
+        <div class="form-group"><label class="form-label">Offer Decision</label><select class="form-control" id="cand-decision"><option value="">—</option><option>Accepted</option><option>Declined</option></select></div>
+        <div class="form-group"><label class="form-label">Follow-Up Date</label><input type="date" class="form-control" id="cand-followup-date"></div>
+        <div class="form-group"><label class="form-label">Start Date</label><input type="date" class="form-control" id="cand-start-date"></div>
+      </div>
+      <div class="section-divider">Additional</div>
+      <div class="form-grid">
+        <div class="form-group full"><label class="form-label">Notes</label><input type="text" class="form-control" id="cand-notes" placeholder="Any additional notes…"></div>
+        <div class="form-group full"><label class="form-label">Resume Link</label><input type="url" class="form-control" id="cand-resume-link" placeholder="https://…"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('cand-overlay')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCandidate()">Save Candidate</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────────────────────
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzkhbAWpcyHkYzIuQBDm6dXgduQxo3HoaToE-gFB8dyHkG_Sl9Txn4wnU-R29_2osJHeQ/exec';
+
+const USERS = {
+  matt:   'Matt Glover',
+  amanda: "Amanda O'Dell"
+};
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let state = {
+  user: null,
+  settings: { locations:[], positions:[], openingTypes:[], sources:[] },
+  jobs: [],
+  candidates: [],
+  jobFilter: { status:'all', location:'all' },
+  candFilter: { screen:'all', position:'all', location:'all', stage:'all', query:'' },
+  massRows: []
+};
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+  const key = (params.get('user') || '').toLowerCase();
+  const name = USERS[key];
+
+  if (!name) {
+    document.getElementById('no-user').style.display = 'flex';
+    return;
+  }
+
+  state.user = { key, name };
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('nav-name').textContent = name;
+  document.getElementById('nav-initials').textContent = name.split(' ').map(w=>w[0]).join('').slice(0,2);
+
+  // Set today's date as default for mass add
+  document.getElementById('mass-date').value = today();
+
+  if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') {
+    showSetupMessage();
+    return;
+  }
+  loadData();
+});
+
+function today() {
+  return new Date().toISOString().slice(0,10);
+}
+
+function showSetupMessage() {
+  ['jobs-table-body','cands-table-body'].forEach(id => {
+    document.getElementById(id).innerHTML = `
+      <div class="setup-screen">
+        <h2>Setup Required</h2>
+        <p>Deploy the <code>Code.gs</code> as a Google Apps Script Web App, then paste the URL into <code>index.html</code> as <code>APPS_SCRIPT_URL</code>.</p>
+        <p>See the included deployment instructions for step-by-step guidance.</p>
+      </div>`;
+  });
+}
+
+// ── DATA LOADING ──────────────────────────────────────────────────────────────
+function loadData() {
+  jsonp('getAll', null, data => {
+    if (data.error) { showToast('Load error: ' + data.error, 'error'); return; }
+    state.settings   = data.settings   || state.settings;
+    state.jobs        = data.jobs        || [];
+    state.candidates  = data.candidates  || [];
+    renderAll();
+  });
+}
+
+function renderAll() {
+  populateDropdowns();
+  renderJobs();
+  renderCandidates();
+  renderPipeline();
+  renderAdmin();
+  populateMassJobDropdown();
+}
+
+// ── DROPDOWNS ─────────────────────────────────────────────────────────────────
+function populateDropdowns() {
+  const s = state.settings;
+
+  // Job modal
+  fillSelect('job-position', s.positions);
+  fillSelect('job-location', s.locations);
+  fillSelect('job-type', s.openingTypes);
+
+  // Candidate modal
+  fillSelect('cand-position', s.positions, true);
+  fillSelect('cand-location', s.locations, true);
+  fillSelect('cand-source', s.sources, true);
+
+  // Job filter location
+  const jlf = document.getElementById('job-loc-filter');
+  const curJLoc = jlf.value;
+  jlf.innerHTML = '<option value="all">All Locations</option>' + s.locations.map(l=>`<option value="${l}">${l}</option>`).join('');
+  if (curJLoc) jlf.value = curJLoc;
+
+  // Cand filter position & location
+  const cpf = document.getElementById('cand-pos-filter');
+  const curCP = cpf.value;
+  cpf.innerHTML = '<option value="all">All Positions</option>' + s.positions.map(p=>`<option value="${p}">${p}</option>`).join('');
+  if (curCP) cpf.value = curCP;
+
+  const clf = document.getElementById('cand-loc-filter');
+  const curCL = clf.value;
+  clf.innerHTML = '<option value="all">All Locations</option>' + s.locations.map(l=>`<option value="${l}">${l}</option>`).join('');
+  if (curCL) clf.value = curCL;
+
+  // Mass add source
+  const ms = document.getElementById('mass-source');
+  ms.innerHTML = s.sources.map(src=>`<option value="${src}">${src}</option>`).join('');
+}
+
+function fillSelect(id, items, addBlank=false) {
+  const el = document.getElementById(id);
+  const cur = el.value;
+  el.innerHTML = (addBlank ? '<option value="">— Select —</option>' : '') + items.map(i=>`<option value="${esc(i)}">${esc(i)}</option>`).join('');
+  if (cur) el.value = cur;
+}
+
+function populateMassJobDropdown() {
+  const sel = document.getElementById('mass-job');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">— Select opening —</option>' +
+    state.jobs.filter(j => j.status !== 'Hired').map(j => {
+      const label = `${j.positionTitle} — ${j.location}`;
+      return `<option value="${esc(j.id)}">${esc(label)}</option>`;
+    }).join('');
+  if (cur) sel.value = cur;
+}
+
+document.addEventListener('change', e => {
+  if (e.target.id === 'mass-job') {
+    const job = state.jobs.find(j => j.id === e.target.value);
+    document.getElementById('mass-location').value = job ? job.location : '';
+  }
+});
+
+// ── JOB OPENINGS ─────────────────────────────────────────────────────────────
+function renderJobs() {
+  const jf = state.jobFilter;
+  let jobs = state.jobs.filter(j => {
+    if (jf.status !== 'all' && j.status !== jf.status) return false;
+    if (jf.location !== 'all' && j.location !== jf.location) return false;
+    return true;
+  });
+
+  // Stats
+  const all = state.jobs;
+  document.getElementById('stat-total').textContent   = all.length;
+  document.getElementById('stat-total-sub').textContent = `Across ${[...new Set(all.map(j=>j.location))].length} locations`;
+  document.getElementById('stat-hold').textContent    = all.filter(j=>j.status==='Hold').length;
+  document.getElementById('stat-hired').textContent   = all.filter(j=>j.status==='Hired').length;
+  document.getElementById('stat-new').textContent     = all.filter(j=>j.openingType==='New Facility').length;
+  document.getElementById('stat-new-sub').textContent = `vs ${all.filter(j=>j.openingType==='Ongoing Facility').length} ongoing`;
+
+  document.getElementById('job-count').textContent = `${jobs.length} opening${jobs.length!==1?'s':''}`;
+
+  if (!jobs.length) {
+    document.getElementById('jobs-table-body').innerHTML = '<div class="empty-state">No openings match the current filter.</div>';
+    return;
+  }
+
+  const rows = jobs.map(j => {
+    const candCount = state.candidates.filter(c => c.position === j.positionTitle && c.location === j.location).length;
+    return `<tr>
+      <td><span class="mono">${esc(reqId(j))}</span></td>
+      <td>${esc(j.positionTitle)}</td>
+      <td>${esc(j.location)}</td>
+      <td><span class="badge b-${j.openingType==='New Facility'?'new':'ongoing'}">${esc(j.openingType)}</span></td>
+      <td style="font-size:12px;color:var(--text-3)">${fmtDate(j.requisitionDate)}</td>
+      <td style="font-size:12px;color:var(--text-3)">${fmtDate(j.targetStartDate)||'—'}</td>
+      <td><span class="badge b-${j.status.toLowerCase()}">${esc(j.status)}</span></td>
+      <td style="font-size:12px;color:var(--text-3)">${candCount}</td>
+      <td style="font-size:11px;color:var(--text-3)">${esc(j.createdBy)}</td>
+      <td><button class="action-btn" onclick="openJobModal('${esc(j.id)}')">Edit</button></td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('jobs-table-body').innerHTML = `
+    <table><thead><tr>
+      <th>Req ID</th><th>Position</th><th>Location</th><th>Type</th>
+      <th>Req Date</th><th>Target Start</th><th>Status</th><th>Candidates</th><th>Added By</th><th></th>
+    </tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function reqId(j) {
+  const posMap = {'Licensed Social Worker':'LSW','Behavioral Health Technician':'BHT'};
+  const pos = posMap[j.positionTitle] || j.positionTitle.substring(0,3).toUpperCase();
+  const loc = (j.location||'').replace(/\s+/g,'').substring(0,3).toUpperCase();
+  const id = (j.id||'').slice(-4);
+  return `${pos}-${loc}-${id}`;
+}
+
+function filterJobs(key, val, btn) {
+  state.jobFilter[key] = val;
+  if (btn) {
+    btn.closest('.filter-pills')?.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+  }
+  renderJobs();
+}
+
+// ── CANDIDATES ────────────────────────────────────────────────────────────────
+const STAGES = ['Resume Review','Phone Screen','1st Interview','Verbal Offer','Written Offer','Offer Accepted'];
+
+function renderPipeline() {
+  const counts = {};
+  STAGES.forEach(s => counts[s] = 0);
+  state.candidates.forEach(c => { if (counts[c.currentStage] !== undefined) counts[c.currentStage]++; });
+
+  document.getElementById('pipeline-bar').innerHTML = STAGES.map(s => `
+    <div class="p-stage ${state.candFilter.stage===s?'active':''}" onclick="filterCands('stage','${s}',null,'pipeline')">
+      <div class="p-count">${counts[s]}</div>
+      <div class="p-label">${s}</div>
+    </div>`).join('');
+}
+
+function renderCandidates() {
+  const cf = state.candFilter;
+  let cands = state.candidates.filter(c => {
+    if (cf.screen !== 'all' && c.resumeScreenResult !== cf.screen) return false;
+    if (cf.position !== 'all' && c.position !== cf.position) return false;
+    if (cf.location !== 'all' && c.location !== cf.location) return false;
+    if (cf.stage !== 'all' && c.currentStage !== cf.stage) return false;
+    if (cf.query && !c.candidateName.toLowerCase().includes(cf.query.toLowerCase())) return false;
+    return true;
+  });
+
+  document.getElementById('cand-count').textContent = `${cands.length} candidate${cands.length!==1?'s':''}`;
+
+  if (!cands.length) {
+    document.getElementById('cands-table-body').innerHTML = '<div class="empty-state">No candidates match the current filter.</div>';
+    return;
+  }
+
+  const stageClass = { 'Resume Review':'s-resume','Phone Screen':'s-phone','1st Interview':'s-interview',
+    'Verbal Offer':'s-offer','Written Offer':'s-written','Offer Accepted':'s-accepted','Offer Declined':'s-declined','Withdrawn':'s-declined' };
+
+  const rows = cands.map(c => `<tr>
+    <td><div class="cname">${esc(c.candidateName)}</div><div class="cloc">${esc(c.location)}</div></td>
+    <td style="font-size:12px;color:var(--text-3)">${esc(c.phoneNumber)}</td>
+    <td><span class="mono">${esc(c.position)}</span></td>
+    <td style="font-size:12px;color:var(--text-3)">${esc(c.source)}</td>
+    <td>${c.resumeScreenResult ? `<span class="badge b-${c.resumeScreenResult.toLowerCase()}">${esc(c.resumeScreenResult)}</span>` : '<span style="color:var(--text-3);font-size:12px">—</span>'}</td>
+    <td><span class="s-badge ${stageClass[c.currentStage]||'s-resume'}">${esc(c.currentStage)}</span></td>
+    <td style="font-size:12px;color:var(--text-3)">${fmtDate(c.createdAt)||'—'}</td>
+    <td style="font-size:11px;color:var(--text-3)">${esc(c.createdBy)}</td>
+    <td><button class="action-btn" onclick="openCandidateModal('${esc(c.id)}')">Update</button></td>
+  </tr>`).join('');
+
+  document.getElementById('cands-table-body').innerHTML = `
+    <table><thead><tr>
+      <th>Candidate</th><th>Phone</th><th>Position</th><th>Source</th>
+      <th>Resume</th><th>Current Stage</th><th>Added</th><th>By</th><th></th>
+    </tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function filterCands(key, val, btn, src) {
+  if (key === 'stage') {
+    state.candFilter.stage = (state.candFilter.stage === val && src === 'pipeline') ? 'all' : val;
+  } else {
+    state.candFilter[key] = val;
+  }
+  if (btn) {
+    btn.closest('.filter-pills')?.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+  }
+  renderPipeline();
+  renderCandidates();
+}
+
+// ── JOB MODAL ─────────────────────────────────────────────────────────────────
+function openJobModal(id) {
+  const job = id ? state.jobs.find(j=>j.id===id) : null;
+  document.getElementById('job-modal-title').textContent = job ? 'Edit Job Opening' : 'New Job Opening';
+  document.getElementById('job-id').value          = job?.id || '';
+  document.getElementById('job-position').value    = job?.positionTitle || '';
+  document.getElementById('job-location').value    = job?.location || '';
+  document.getElementById('job-type').value        = job?.openingType || '';
+  document.getElementById('job-status').value      = job?.status || 'Hold';
+  document.getElementById('job-req-date').value    = job?.requisitionDate || '';
+  document.getElementById('job-start-date').value  = job?.targetStartDate || '';
+  document.getElementById('job-indeed-date').value = job?.datePostedIndeed || '';
+  document.getElementById('job-linkedin-date').value = job?.datePostedLinkedIn || '';
+  document.getElementById('job-filled-date').value = job?.dateFilled || '';
+  document.getElementById('job-person-hired').value = job?.personHired || '';
+  document.getElementById('job-comments').value    = job?.comments || '';
+  openModal('job-overlay');
+}
+
+function saveJob() {
+  const pos = document.getElementById('job-position').value;
+  const loc = document.getElementById('job-location').value;
+  if (!pos || !loc) { showToast('Position and Location are required.', 'error'); return; }
+
+  const id = document.getElementById('job-id').value;
+  const payload = {
+    id,
+    positionTitle: pos, location: loc,
+    openingType: document.getElementById('job-type').value,
+    status: document.getElementById('job-status').value,
+    requisitionDate: document.getElementById('job-req-date').value,
+    targetStartDate: document.getElementById('job-start-date').value,
+    datePostedIndeed: document.getElementById('job-indeed-date').value,
+    datePostedLinkedIn: document.getElementById('job-linkedin-date').value,
+    dateFilled: document.getElementById('job-filled-date').value,
+    personHired: document.getElementById('job-person-hired').value,
+    comments: document.getElementById('job-comments').value,
+    createdBy: state.user.name
+  };
+
+  const action = id ? 'updateJob' : 'addJob';
+  jsonp(action, payload, data => {
+    if (data.error) { showToast('Error: ' + data.error, 'error'); return; }
+    showToast(id ? 'Opening updated.' : 'Opening added.', 'success');
+    closeModal('job-overlay');
+    loadData();
+  });
+}
+
+// ── CANDIDATE MODAL ───────────────────────────────────────────────────────────
+function openCandidateModal(id) {
+  const c = id ? state.candidates.find(x=>x.id===id) : null;
+  document.getElementById('cand-modal-title').textContent = c ? 'Update Candidate' : 'Add Candidate';
+  const fields = {
+    'cand-id': c?.id||'', 'cand-name': c?.candidateName||'', 'cand-phone': c?.phoneNumber||'',
+    'cand-position': c?.position||'', 'cand-location': c?.location||'', 'cand-source': c?.source||'',
+    'cand-stage': c?.currentStage||'Resume Review', 'cand-screen': c?.resumeScreenResult||'',
+    'cand-resume-date': c?.dateResumeReceived||'', 'cand-contact-date': c?.attemptedContactDate||'',
+    'cand-contact-result': c?.attemptedContactResult||'', 'cand-phone-date': c?.phoneScreenDate||'',
+    'cand-phone-result': c?.phoneScreenResult||'', 'cand-int-date': c?.firstInterviewDate||'',
+    'cand-int-result': c?.firstInterviewResult||'', 'cand-verbal-date': c?.verbalOfferDate||'',
+    'cand-written-date': c?.writtenOfferSent||'', 'cand-decision-date': c?.offerDecisionDate||'',
+    'cand-decision': c?.offerDecision||'', 'cand-followup-date': c?.followUpDate||'',
+    'cand-start-date': c?.startDate||'', 'cand-notes': c?.notes||'', 'cand-resume-link': c?.resumeLink||''
+  };
+  Object.entries(fields).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  });
+  openModal('cand-overlay');
+}
+
+function saveCandidate() {
+  const name = document.getElementById('cand-name').value.trim();
+  const pos  = document.getElementById('cand-position').value;
+  if (!name || !pos) { showToast('Name and Position are required.', 'error'); return; }
+
+  const id = document.getElementById('cand-id').value;
+  const payload = {
+    id,
+    candidateName: name,
+    phoneNumber: document.getElementById('cand-phone').value,
+    position: pos,
+    location: document.getElementById('cand-location').value,
+    source: document.getElementById('cand-source').value,
+    currentStage: document.getElementById('cand-stage').value,
+    resumeScreenResult: document.getElementById('cand-screen').value,
+    dateResumeReceived: document.getElementById('cand-resume-date').value,
+    attemptedContactDate: document.getElementById('cand-contact-date').value,
+    attemptedContactResult: document.getElementById('cand-contact-result').value,
+    phoneScreenDate: document.getElementById('cand-phone-date').value,
+    phoneScreenResult: document.getElementById('cand-phone-result').value,
+    firstInterviewDate: document.getElementById('cand-int-date').value,
+    firstInterviewResult: document.getElementById('cand-int-result').value,
+    verbalOfferDate: document.getElementById('cand-verbal-date').value,
+    writtenOfferSent: document.getElementById('cand-written-date').value,
+    offerDecisionDate: document.getElementById('cand-decision-date').value,
+    offerDecision: document.getElementById('cand-decision').value,
+    followUpDate: document.getElementById('cand-followup-date').value,
+    startDate: document.getElementById('cand-start-date').value,
+    notes: document.getElementById('cand-notes').value,
+    resumeLink: document.getElementById('cand-resume-link').value,
+    createdBy: state.user.name
+  };
+
+  jsonp(id ? 'updateCandidate' : 'addCandidate', payload, data => {
+    if (data.error) { showToast('Error: ' + data.error, 'error'); return; }
+    showToast(id ? 'Candidate updated.' : 'Candidate added.', 'success');
+    closeModal('cand-overlay');
+    loadData();
+  });
+}
+
+// ── MASS ADD ──────────────────────────────────────────────────────────────────
+document.getElementById('paste-area').addEventListener('paste', () => {
+  setTimeout(parsePaste, 80);
+});
+
+function parsePaste() {
+  const raw = document.getElementById('paste-area').value.trim();
+  if (!raw) return;
+
+  const rows = raw.split('\n').map(line => {
+    const parts = line.split('\t');
+    return {
+      name:  (parts[0]||'').trim(),
+      phone: (parts[1]||'').trim()
+    };
+  }).filter(r => r.name);
+
+  state.massRows = rows;
+  renderMassPreview();
+}
+
+function renderMassPreview() {
+  const section = document.getElementById('preview-section');
+  const container = document.getElementById('preview-rows');
+  const countBadge = document.getElementById('preview-count');
+
+  if (!state.massRows.length) {
+    section.style.display = 'none';
+    return;
+  }
+
+  section.style.display = 'block';
+  countBadge.textContent = state.massRows.length;
+
+  container.innerHTML = state.massRows.map((r, i) => `
+    <div class="preview-row" id="pr-${i}">
+      <input type="text" value="${esc(r.name)}" placeholder="Full Name" oninput="updateMassRow(${i},'name',this.value)">
+      <input type="tel"  value="${esc(r.phone)}" placeholder="+1 000 000 0000" oninput="updateMassRow(${i},'phone',this.value)">
+      <button class="preview-remove" onclick="removeMassRow(${i})" title="Remove">✕</button>
+    </div>`).join('');
+}
+
+function updateMassRow(i, key, val) {
+  if (state.massRows[i]) state.massRows[i][key] = val;
+  document.getElementById('preview-count').textContent = state.massRows.length;
+}
+
+function removeMassRow(i) {
+  state.massRows.splice(i, 1);
+  renderMassPreview();
+}
+
+function addPreviewRow() {
+  state.massRows.push({ name:'', phone:'' });
+  renderMassPreview();
+  // focus new row
+  setTimeout(() => {
+    const inputs = document.querySelectorAll('.preview-row input');
+    if (inputs.length) inputs[inputs.length-2].focus();
+  }, 50);
+}
+
+function clearMassAdd() {
+  state.massRows = [];
+  document.getElementById('paste-area').value = '';
+  document.getElementById('preview-section').style.display = 'none';
+}
+
+function submitMassAdd() {
+  const jobId  = document.getElementById('mass-job').value;
+  const source = document.getElementById('mass-source').value;
+  const date   = document.getElementById('mass-date').value;
+
+  if (!jobId) { showToast('Please select a Job Opening first.', 'error'); return; }
+
+  const job = state.jobs.find(j => j.id === jobId);
+  if (!job) { showToast('Job not found.', 'error'); return; }
+
+  const toAdd = state.massRows.filter(r => r.name.trim());
+  if (!toAdd.length) { showToast('No valid rows to add.', 'error'); return; }
+
+  const btn = document.getElementById('mass-submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Adding…';
+
+  const candidates = toAdd.map(r => ({
+    candidateName: r.name.trim(),
+    phoneNumber:   r.phone.trim(),
+    position:      job.positionTitle,
+    location:      job.location,
+    source,
+    dateResumeReceived: date,
+    createdBy: state.user.name
+  }));
+
+  jsonp('bulkAddCandidates', { candidates }, data => {
+    btn.disabled = false;
+    btn.textContent = 'Add Candidates';
+    if (data.error) { showToast('Error: ' + data.error, 'error'); return; }
+    showToast(`${data.count} candidate${data.count!==1?'s':''} added successfully.`, 'success');
+    clearMassAdd();
+    loadData();
+  });
+}
+
+// ── ADMIN ─────────────────────────────────────────────────────────────────────
+function renderAdmin() {
+  renderAdminCard('admin-locations-card', 'Locations', 'location', state.settings.locations);
+  renderAdminCard('admin-positions-card', 'Position Titles', 'position', state.settings.positions);
+  renderAdminCard('admin-sources-card', 'Candidate Sources', 'source', state.settings.sources);
+  renderAdminCard('admin-types-card', 'Opening Types', 'openingType', state.settings.openingTypes);
+}
+
+function renderAdminCard(cardId, title, category, items) {
+  const el = document.getElementById(cardId);
+  const rows = items.map(v => `
+    <tr>
+      <td>${esc(v)}</td>
+      <td style="text-align:right">
+        <button class="action-btn action-btn-danger" onclick="removeSetting('${category}','${esc(v)}')">Remove</button>
+      </td>
+    </tr>`).join('') || `<tr><td colspan="2" style="color:var(--text-3);font-size:12px;text-align:center;padding:14px">None yet</td></tr>`;
+
+  el.innerHTML = `
+    <div class="card-header">
+      <span class="card-title">${title}</span>
+    </div>
+    <table><tbody>${rows}</tbody></table>
+    <div class="add-setting-row">
+      <input type="text" placeholder="Add new ${title.toLowerCase().replace(/s$/,'')}…" id="new-${category}" onkeydown="if(event.key==='Enter')addSetting('${category}','${category}')">
+      <button class="btn btn-primary btn-sm" onclick="addSetting('${category}','${category}')">Add</button>
+    </div>`;
+}
+
+function addSetting(category, inputCategory) {
+  const inp = document.getElementById('new-' + inputCategory);
+  const val = inp.value.trim();
+  if (!val) return;
+  jsonp('addSetting', { category, value: val }, data => {
+    if (data.error) { showToast('Error: ' + data.error, 'error'); return; }
+    inp.value = '';
+    loadData();
+    showToast('Added.', 'success');
+  });
+}
+
+function removeSetting(category, value) {
+  if (!confirm(`Remove "${value}" from the list?`)) return;
+  jsonp('removeSetting', { category, value }, data => {
+    if (data.error) { showToast('Error: ' + data.error, 'error'); return; }
+    loadData();
+    showToast('Removed.', 'success');
+  });
+}
+
+// ── MODAL HELPERS ─────────────────────────────────────────────────────────────
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function overlayClick(e, id) { if (e.target === document.getElementById(id)) closeModal(id); }
+
+// ── PAGE NAVIGATION ───────────────────────────────────────────────────────────
+function showPage(name, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('visible'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('visible');
+  el.classList.add('active');
+  if (name === 'massadd') populateMassJobDropdown();
+}
+
+// ── JSONP ─────────────────────────────────────────────────────────────────────
+function jsonp(action, payload, callback) {
+  const cb = 'cb_' + Date.now() + '_' + Math.floor(Math.random()*9999);
+  const script = document.createElement('script');
+  let url = APPS_SCRIPT_URL + '?action=' + action + '&callback=' + cb;
+  if (payload) url += '&payload=' + encodeURIComponent(JSON.stringify(payload));
+  window[cb] = data => { delete window[cb]; document.body.removeChild(script); callback(data); };
+  script.onerror = () => { delete window[cb]; document.body.removeChild(script); callback({ error: 'Network error' }); };
+  script.src = url;
+  document.body.appendChild(script);
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type ? ' ' + type : '');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function fmtDate(d) {
+  if (!d) return '';
+  const m = String(d).match(/(\d{4})-(\d{2})-(\d{2})/);
+  return m ? `${parseInt(m[2])}/${parseInt(m[3])}/${m[1].slice(2)}` : d;
+}
+</script>
+</body>
+</html>
