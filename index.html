@@ -416,6 +416,7 @@ select.form-control{cursor:pointer}
   <div class="dash-main">
     <div class="page-header">
       <div><div class="page-title">Dashboard</div><div class="page-sub" id="dash-subtitle">Hiring pipeline overview</div></div>
+      <button class="btn btn-ghost" id="dl-report-btn" onclick="generateReport(this)">⬇ Download Report</button>
     </div>
 
     <!-- KPIs -->
@@ -663,7 +664,7 @@ select.form-control{cursor:pointer}
 
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────────────────
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw8XXjIKVwLWwMk_kZz9BvQexdAmHXF8Od2BnZ1QL8zxRnK79M1niVJ-ER1aki15cgjeg/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxwFeDZc2QXNdkPt8qib3z_fVsXagtElHQjbtS7AgBu-N75ux7vmAqKq3xit6Remattgw/exec';
 
 const USERS = {
   matt:   'Matt Glover',
@@ -1467,6 +1468,257 @@ function set(id, val) {
 
 function pct(n, d) {
   return d ? (n/d*100).toFixed(1) + '%' : '—';
+}
+
+
+// ── REPORT GENERATOR ─────────────────────────────────────────────────────────
+async function generateReport(btn) {
+  const orig = btn.textContent;
+  btn.textContent = 'Building…';
+  btn.disabled = true;
+
+  try {
+    // Fetch Chart.js source to embed (only dependency, ~200 KB)
+    const chartSrc = await fetch('https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js')
+      .then(r => r.text());
+
+    const logoSrc = document.querySelector('.nav-logo').src; // already base64
+    const now     = new Date();
+    const dateStr = now.toLocaleDateString('en-US', { month:'long', day:'numeric', year:'numeric' });
+    const timeStr = now.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' });
+
+    const reportHTML = buildReportHTML(chartSrc, logoSrc, dateStr, timeStr);
+
+    const blob = new Blob([reportHTML], { type: 'text/html' });
+    const a    = document.createElement('a');
+    a.href     = URL.createObjectURL(blob);
+    a.download = `CRC_Hiring_Report_${today()}.html`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  } catch(e) {
+    showToast('Report generation failed: ' + e.message, 'error');
+  }
+
+  btn.textContent = orig;
+  btn.disabled = false;
+}
+
+function buildReportHTML(chartSrc, logoSrc, dateStr, timeStr) {
+  const jobs  = state.jobs;
+  const cands = state.candidates;
+
+  // ── Compute metrics ────────────────────────────────────────────────────────
+  const hired       = cands.filter(c => c.currentStage === 'Offer Accepted').length;
+  const openJobs    = jobs.filter(j => j.status !== 'Hired').length;
+  const accepted    = cands.filter(c => c.offerDecision === 'Accepted').length;
+  const declined    = cands.filter(c => c.offerDecision === 'Declined').length;
+  const interviewed = cands.filter(c => c.firstInterviewDate).length;
+
+  const hireDays = cands
+    .filter(c => c.currentStage === 'Offer Accepted' && c.dateResumeReceived && c.offerDecisionDate)
+    .map(c => Math.round((new Date(c.offerDecisionDate) - new Date(c.dateResumeReceived)) / 86400000));
+  const avgDays = hireDays.length ? (hireDays.reduce((a,b)=>a+b,0)/hireDays.length).toFixed(1) : '—';
+
+  const rPct = (n,d) => d ? (n/d*100).toFixed(1)+'%' : '—';
+
+  // ── Position table rows ───────────────────────────────────────────────────
+  const posRows = jobs.map(j => {
+    const jc = cands.filter(c => c.position===j.positionTitle && c.location===j.location);
+    const n = (arr) => arr.length || '—';
+    const statusColors = { Hold:'#FDF4E3;color:#B07D2A', Active:'#EDE8F5;color:#52307C', Hired:'#E8F2EE;color:#3D6B5E' };
+    const sc = statusColors[j.status] || statusColors.Hold;
+    return `<tr>
+      <td>${j.positionTitle}</td>
+      <td style="color:#6B5F80;font-size:12px">${j.location}</td>
+      <td style="font-family:monospace;font-size:11px;color:#6B5F80">${reqId(j)}</td>
+      <td><span style="padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;background:${sc}">${j.status}</span></td>
+      <td style="font-size:12px;color:#6B5F80">${fmtDate(j.requisitionDate)||'—'}</td>
+      ${[jc.length, jc.filter(c=>c.phoneScreenDate).length, jc.filter(c=>c.firstInterviewDate).length,
+         jc.filter(c=>c.verbalOfferDate||c.writtenOfferSent).length, jc.filter(c=>c.currentStage==='Offer Accepted').length]
+        .map(v=>`<td style="text-align:center;font-weight:700;color:${v?'#52307C':'#ccc'};font-size:${v?'15':'13'}px">${v||'—'}</td>`).join('')}
+    </tr>`;
+  }).join('');
+
+  // ── Active pipeline rows ──────────────────────────────────────────────────
+  const STAGE_ORDER = ['Resume Review','Phone Screen','1st Interview','Verbal Offer','Written Offer','Offer Accepted'];
+  const active = cands
+    .filter(c => c.currentStage !== 'Resume Review')
+    .sort((a,b) => STAGE_ORDER.indexOf(b.currentStage) - STAGE_ORDER.indexOf(a.currentStage));
+
+  const stagePill = {
+    'Phone Screen':   '#EBF3EE;color:#3D6B5E',
+    '1st Interview':  '#FFF7ED;color:#C2410C',
+    'Verbal Offer':   '#F3EDF9;color:#7B4FB5',
+    'Written Offer':  '#EEF2FF;color:#4338CA',
+    'Offer Accepted': '#E8F2EE;color:#3D6B5E',
+    'Offer Declined': '#FDEEEC;color:#C0392B',
+  };
+
+  const activeRows = active.map(c => {
+    const days = c.dateResumeReceived
+      ? Math.round((new Date() - new Date(c.dateResumeReceived)) / 86400000) : null;
+    const job = jobs.find(j => j.positionTitle===c.position && j.location===c.location);
+    const sc  = stagePill[c.currentStage] || '#F3F0F7;color:#6B5F80';
+    return `<tr>
+      <td style="font-weight:600">${c.candidateName}</td>
+      <td style="font-size:12px;color:#6B5F80">${c.position}</td>
+      <td style="font-family:monospace;font-size:11px;color:#6B5F80">${job ? reqId(job) : '—'}</td>
+      <td><span style="padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;background:${sc}">${c.currentStage}</span></td>
+      <td style="font-size:12px;color:#6B5F80">${days !== null ? days+' day'+(days!==1?'s':'') : '—'}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="5" style="text-align:center;color:#ccc;padding:24px">No candidates past resume review.</td></tr>';
+
+  // ── Chart data ─────────────────────────────────────────────────────────────
+  const stageCounts = STAGE_ORDER.map(s => cands.filter(c=>c.currentStage===s).length);
+
+  const statusMap = {};
+  jobs.forEach(j => { statusMap[j.status] = (statusMap[j.status]||0)+1; });
+
+  const sourceMap = {};
+  cands.forEach(c => { sourceMap[c.source||'Unknown'] = (sourceMap[c.source||'Unknown']||0)+1; });
+
+  const locMap = {};
+  cands.forEach(c => { if(c.location) locMap[c.location] = (locMap[c.location]||0)+1; });
+  const locLabels = Object.keys(locMap).sort((a,b)=>locMap[b]-locMap[a]);
+
+  const J = JSON.stringify;
+
+  // ── Full HTML ──────────────────────────────────────────────────────────────
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CRC Hiring Report — ${dateStr}</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#F7F5F9;color:#1E1428;font-size:14px}
+.header{background:linear-gradient(135deg,#3D1F66,#52307C);color:#fff;padding:24px 36px;display:flex;justify-content:space-between;align-items:center}
+.header-left{display:flex;align-items:center;gap:14px}
+.header-logo{width:52px;height:52px;border-radius:50%;object-fit:contain;background:#fff;padding:2px}
+.header-title{font-size:22px;font-weight:700;letter-spacing:-.3px}
+.header-sub{font-size:12px;opacity:.75;margin-top:3px}
+.header-date{font-size:13px;opacity:.8;text-align:right}
+.wrap{max-width:1180px;margin:0 auto;padding:24px 20px}
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.kpi{background:#fff;border-radius:10px;padding:18px 16px;box-shadow:0 1px 4px rgba(82,48,124,.08);border-left:4px solid #52307C}
+.kpi.sage{border-left-color:#3D6B5E}.kpi.amber{border-left-color:#B07D2A}.kpi.lav{border-left-color:#A67DC5}
+.kpi-label{font-size:10px;font-weight:700;color:#A699B8;text-transform:uppercase;letter-spacing:.7px;margin-bottom:5px}
+.kpi-val{font-size:34px;font-weight:700;color:#52307C;line-height:1}
+.kpi.sage .kpi-val{color:#3D6B5E}.kpi.amber .kpi-val{color:#B07D2A}.kpi.lav .kpi-val{color:#A67DC5}
+.kpi-sub{font-size:11px;color:#A699B8;margin-top:4px}
+.metrics-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.metric{background:#fff;border-radius:10px;padding:14px;box-shadow:0 1px 4px rgba(82,48,124,.08);text-align:center}
+.metric-label{font-size:10px;font-weight:700;color:#A699B8;text-transform:uppercase;letter-spacing:.6px}
+.metric-val{font-size:26px;font-weight:700;margin:5px 0 3px}
+.metric-val.green{color:#3D6B5E}.metric-val.purple{color:#52307C}.metric-val.lav{color:#A67DC5}.metric-val.amber{color:#B07D2A}
+.metric-detail{font-size:11px;color:#A699B8}
+.card{background:#fff;border-radius:10px;box-shadow:0 1px 4px rgba(82,48,124,.08);overflow:hidden;margin-bottom:20px;border:1px solid #E2DCF0}
+.card-hdr{padding:12px 16px;background:#F3F0F7;border-bottom:1px solid #E2DCF0;font-size:13px;font-weight:600;color:#52307C}
+table{width:100%;border-collapse:collapse}
+th{padding:9px 13px;text-align:left;font-size:10px;font-weight:700;color:#A699B8;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #E2DCF0;background:#F3F0F7;white-space:nowrap}
+td{padding:10px 13px;border-bottom:1px solid #E2DCF0;vertical-align:middle;font-size:13px}
+tr:last-child td{border-bottom:none}
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+.chart-card{background:#fff;border-radius:10px;box-shadow:0 1px 4px rgba(82,48,124,.08);padding:18px;border:1px solid #E2DCF0}
+.chart-title{font-size:13px;font-weight:600;color:#52307C;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #E2DCF0}
+.chart-wrap{position:relative;height:230px}
+.footer{text-align:center;padding:16px;font-size:11px;color:#A699B8;border-top:1px solid #E2DCF0;margin-top:8px}
+@media print{body{background:#fff}.header{-webkit-print-color-adjust:exact;print-color-adjust:exact}.card,.chart-card,.kpi,.metric{break-inside:avoid}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <img class="header-logo" src="${logoSrc}" alt="CRC Logo">
+    <div>
+      <div class="header-title">Castlereagh Hiring Report</div>
+      <div class="header-sub">Behavioral Health Staffing Overview</div>
+    </div>
+  </div>
+  <div class="header-date">Report Date: ${dateStr}</div>
+</div>
+
+<div class="wrap">
+
+  <div class="kpi-row">
+    <div class="kpi"><div class="kpi-label">Total Candidates</div><div class="kpi-val">${cands.length}</div><div class="kpi-sub">across ${[...new Set(cands.map(c=>c.position))].length} position types</div></div>
+    <div class="kpi sage"><div class="kpi-label">Offer Accepted</div><div class="kpi-val">${hired}</div><div class="kpi-sub">of ${jobs.length} total openings</div></div>
+    <div class="kpi amber"><div class="kpi-label">Open Positions</div><div class="kpi-val">${openJobs}</div><div class="kpi-sub">${jobs.filter(j=>j.status==='Hold').length} on hold · ${jobs.filter(j=>j.status==='Active').length} active</div></div>
+    <div class="kpi lav"><div class="kpi-label">Avg Days to Hire</div><div class="kpi-val">${avgDays}</div><div class="kpi-sub">resume received → offer accepted</div></div>
+  </div>
+
+  <div class="metrics-row">
+    <div class="metric"><div class="metric-label">Offer Accept Rate</div><div class="metric-val green">${rPct(accepted,accepted+declined)}</div><div class="metric-detail">${accepted} of ${accepted+declined} offers</div></div>
+    <div class="metric"><div class="metric-label">Resume → Interview</div><div class="metric-val purple">${rPct(interviewed,cands.length)}</div><div class="metric-detail">${interviewed} of ${cands.length} applicants</div></div>
+    <div class="metric"><div class="metric-label">Interview → Hire</div><div class="metric-val lav">${rPct(hired,interviewed)}</div><div class="metric-detail">${hired} hires from ${interviewed} interviews</div></div>
+    <div class="metric"><div class="metric-label">Applicants / Opening</div><div class="metric-val amber">${jobs.length ? (cands.length/jobs.length).toFixed(1) : '—'}</div><div class="metric-detail">${cands.length} applicants / ${jobs.length} openings</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr">All Positions — Candidate Counts by Stage</div>
+    <table><thead><tr><th>Position</th><th>Location</th><th>Req ID</th><th>Status</th><th>Req Date</th><th style="text-align:center">Applied</th><th style="text-align:center">Phone Screen</th><th style="text-align:center">Interview</th><th style="text-align:center">Offered</th><th style="text-align:center">Accepted</th></tr></thead>
+    <tbody>${posRows}</tbody></table>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr">Active Candidates in Pipeline (${active.length})</div>
+    <table><thead><tr><th>Candidate</th><th>Position</th><th>Req ID</th><th>Current Stage</th><th>Days in Pipeline</th></tr></thead>
+    <tbody>${activeRows}</tbody></table>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-card"><div class="chart-title">Pipeline Stage Counts</div><div class="chart-wrap"><canvas id="c1"></canvas></div></div>
+    <div class="chart-card"><div class="chart-title">Openings by Status</div><div class="chart-wrap"><canvas id="c2"></canvas></div></div>
+    <div class="chart-card"><div class="chart-title">Applicant Sources</div><div class="chart-wrap"><canvas id="c3"></canvas></div></div>
+    <div class="chart-card"><div class="chart-title">Candidates by Location</div><div class="chart-wrap"><canvas id="c4"></canvas></div></div>
+  </div>
+
+  <div class="footer">Generated ${dateStr} at ${timeStr} &mdash; Castlereagh Counseling &amp; Wellness Hiring Tracker</div>
+</div>
+
+<script>
+${chartSrc}
+<\/script>
+<script>
+const COLORS = ['#52307C','#A67DC5','#6B9178','#B07D2A','#3D6B5E','#C0392B'];
+const STAGE_ORDER = ${J(STAGE_ORDER)};
+Chart.defaults.font.family = "'Segoe UI', system-ui, sans-serif";
+Chart.defaults.font.size   = 12;
+
+new Chart(document.getElementById('c1'), {
+  type: 'bar',
+  data: { labels: STAGE_ORDER, datasets: [{ data: ${J(stageCounts)}, backgroundColor: COLORS, borderRadius: 6 }] },
+  options: { indexAxis:'y', responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{display:false} },
+    scales:{ x:{beginAtZero:true,ticks:{stepSize:1},grid:{color:'#F3F0F7'}}, y:{grid:{display:false}} } }
+});
+
+new Chart(document.getElementById('c2'), {
+  type: 'doughnut',
+  data: { labels: ${J(Object.keys(statusMap))}, datasets:[{ data:${J(Object.values(statusMap))}, backgroundColor:['#B07D2A','#52307C','#3D6B5E'], borderColor:'#fff', borderWidth:2 }] },
+  options: { responsive:true, maintainAspectRatio:false, cutout:'58%',
+    plugins:{ legend:{ position:'right', labels:{padding:12,usePointStyle:true} } } }
+});
+
+new Chart(document.getElementById('c3'), {
+  type: 'pie',
+  data: { labels: ${J(Object.keys(sourceMap))}, datasets:[{ data:${J(Object.values(sourceMap))}, backgroundColor:COLORS, borderColor:'#fff', borderWidth:2 }] },
+  options: { responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ position:'right', labels:{padding:12,usePointStyle:true} } } }
+});
+
+new Chart(document.getElementById('c4'), {
+  type: 'bar',
+  data: { labels: ${J(locLabels)}, datasets:[{ data:${J(locLabels.map(k=>locMap[k]))}, backgroundColor:'#A67DC5', borderRadius:6 }] },
+  options: { indexAxis:'y', responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{display:false} },
+    scales:{ x:{beginAtZero:true,ticks:{stepSize:1},grid:{color:'#F3F0F7'}}, y:{grid:{display:false}} } }
+});
+<\/script>
+</body>
+</html>`;
 }
 
 </script>
