@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Castlereagh Hiring Tracker</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -158,6 +159,49 @@ tr:hover td{background:var(--lavender-light)}
 .add-setting-row input{flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;outline:none}
 .add-setting-row input:focus{border-color:var(--accent)}
 
+
+/* ── DASHBOARD ── */
+.dash-main { padding: 24px 20px; max-width: 1200px; margin: 0 auto; }
+.dash-kpi-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 20px; }
+.dash-kpi { background: var(--surface); border-radius: var(--radius); padding: 20px 18px; box-shadow: var(--shadow); border-left: 4px solid var(--accent); position: relative; overflow: hidden; }
+.dash-kpi.sage  { border-left-color: var(--sage-dark); }
+.dash-kpi.amber { border-left-color: var(--amber); }
+.dash-kpi.lav   { border-left-color: var(--lavender); }
+.dash-kpi-label { font-size: 10px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: .7px; margin-bottom: 6px; }
+.dash-kpi-val   { font-family: 'Cormorant Garamond', serif; font-size: 36px; font-weight: 700; color: var(--accent); line-height: 1; }
+.dash-kpi.sage  .dash-kpi-val { color: var(--sage-dark); }
+.dash-kpi.amber .dash-kpi-val { color: var(--amber); }
+.dash-kpi.lav   .dash-kpi-val { color: var(--lavender); }
+.dash-kpi-sub   { font-size: 11px; color: var(--text-3); margin-top: 5px; }
+
+.dash-metrics-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 20px; }
+.dash-metric { background: var(--surface); border-radius: var(--radius); padding: 16px 14px; box-shadow: var(--shadow); text-align: center; }
+.dash-metric-label { font-size: 10px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: .6px; }
+.dash-metric-val   { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 700; margin: 6px 0 3px; }
+.dash-metric-val.green  { color: var(--sage-dark); }
+.dash-metric-val.purple { color: var(--accent); }
+.dash-metric-val.lav    { color: var(--lavender); }
+.dash-metric-val.amber  { color: var(--amber); }
+.dash-metric-detail { font-size: 11px; color: var(--text-3); }
+
+.dash-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 20px; }
+.dash-card-header { padding: 14px 18px; border-bottom: 1px solid var(--border); background: var(--surface-2); display: flex; align-items: center; gap: 10px; }
+.dash-card-title { font-size: 13px; font-weight: 600; color: var(--accent); }
+.dash-card-body  { padding: 0; }
+
+.dash-charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+.dash-chart-card  { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px; }
+.dash-chart-title { font-size: 13px; font-weight: 600; color: var(--accent); margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+.dash-chart-wrap  { position: relative; height: 240px; }
+
+.dash-tbl th { padding: 9px 14px; text-align: left; font-size: 10px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: .5px; border-bottom: 1px solid var(--border); background: var(--surface-2); white-space: nowrap; }
+.dash-tbl td { padding: 10px 14px; font-size: 13px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
+.dash-tbl tr:last-child td { border-bottom: none; }
+.dash-tbl tr:hover td { background: var(--lavender-light); }
+.dash-num { text-align: center; font-weight: 700; color: var(--accent); font-family: 'Cormorant Garamond', serif; font-size: 18px; }
+.dash-num.zero { color: var(--text-3); font-weight: 400; font-size: 14px; }
+.dash-footer { text-align: center; padding: 12px; font-size: 11px; color: var(--text-3); border-top: 1px solid var(--border); }
+
 /* ── TOAST ── */
 .toast{position:fixed;bottom:24px;right:24px;background:#1E1428;color:#fff;padding:12px 18px;border-radius:10px;font-size:13px;font-weight:500;z-index:999;transform:translateY(80px);opacity:0;transition:all .3s;pointer-events:none;max-width:320px}
 .toast.show{transform:translateY(0);opacity:1}
@@ -214,6 +258,7 @@ select.form-control{cursor:pointer}
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('jobs',this)">Job Openings</button>
     <button class="nav-tab" onclick="showPage('candidates',this)">Candidates</button>
+    <button class="nav-tab" onclick="showPage('dashboard',this)">Dashboard</button>
     <button class="nav-tab" onclick="showPage('massadd',this)">Mass Add</button>
     <button class="nav-tab" onclick="showPage('admin',this)">Admin</button>
   </div>
@@ -363,6 +408,97 @@ select.form-control{cursor:pointer}
         <div class="card" id="admin-types-card"></div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ═══ DASHBOARD ═══ -->
+<div id="page-dashboard" class="page">
+  <div class="dash-main">
+    <div class="page-header">
+      <div><div class="page-title">Dashboard</div><div class="page-sub" id="dash-subtitle">Hiring pipeline overview</div></div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="dash-kpi-row">
+      <div class="dash-kpi">
+        <div class="dash-kpi-label">Total Candidates</div>
+        <div class="dash-kpi-val" id="d-total-cands">—</div>
+        <div class="dash-kpi-sub" id="d-total-cands-sub">Loading…</div>
+      </div>
+      <div class="dash-kpi sage">
+        <div class="dash-kpi-label">Offer Accepted</div>
+        <div class="dash-kpi-val" id="d-hired">—</div>
+        <div class="dash-kpi-sub" id="d-hired-sub">—</div>
+      </div>
+      <div class="dash-kpi amber">
+        <div class="dash-kpi-label">Open Positions</div>
+        <div class="dash-kpi-val" id="d-open">—</div>
+        <div class="dash-kpi-sub" id="d-open-sub">—</div>
+      </div>
+      <div class="dash-kpi lav">
+        <div class="dash-kpi-label">Avg Days to Hire</div>
+        <div class="dash-kpi-val" id="d-days">—</div>
+        <div class="dash-kpi-sub">resume received → offer accepted</div>
+      </div>
+    </div>
+
+    <!-- Conversion Metrics -->
+    <div class="dash-metrics-row">
+      <div class="dash-metric">
+        <div class="dash-metric-label">Offer Accept Rate</div>
+        <div class="dash-metric-val green" id="d-accept-rate">—</div>
+        <div class="dash-metric-detail" id="d-accept-detail">—</div>
+      </div>
+      <div class="dash-metric">
+        <div class="dash-metric-label">Resume → Interview</div>
+        <div class="dash-metric-val purple" id="d-res-int">—</div>
+        <div class="dash-metric-detail" id="d-res-int-detail">—</div>
+      </div>
+      <div class="dash-metric">
+        <div class="dash-metric-label">Interview → Hire</div>
+        <div class="dash-metric-val lav" id="d-int-hire">—</div>
+        <div class="dash-metric-detail" id="d-int-hire-detail">—</div>
+      </div>
+      <div class="dash-metric">
+        <div class="dash-metric-label">Applicants / Opening</div>
+        <div class="dash-metric-val amber" id="d-apps-open">—</div>
+        <div class="dash-metric-detail" id="d-apps-open-detail">—</div>
+      </div>
+    </div>
+
+    <!-- Position Summary Table -->
+    <div class="dash-card">
+      <div class="dash-card-header"><span class="dash-card-title">All Positions — Candidate Counts by Stage</span></div>
+      <div class="dash-card-body" id="dash-pos-table"><div class="loading"><div class="spinner"></div> Loading…</div></div>
+    </div>
+
+    <!-- Active Pipeline Table -->
+    <div class="dash-card">
+      <div class="dash-card-header"><span class="dash-card-title">Active Candidates in Pipeline</span><span id="dash-active-count" style="font-size:12px;color:var(--text-3);margin-left:auto"></span></div>
+      <div class="dash-card-body" id="dash-active-table"><div class="loading"><div class="spinner"></div> Loading…</div></div>
+    </div>
+
+    <!-- Charts -->
+    <div class="dash-charts-grid">
+      <div class="dash-chart-card">
+        <div class="dash-chart-title">Pipeline Stage Counts</div>
+        <div class="dash-chart-wrap"><canvas id="chart-pipeline"></canvas></div>
+      </div>
+      <div class="dash-chart-card">
+        <div class="dash-chart-title">Openings by Status</div>
+        <div class="dash-chart-wrap"><canvas id="chart-status"></canvas></div>
+      </div>
+      <div class="dash-chart-card">
+        <div class="dash-chart-title">Applicant Sources</div>
+        <div class="dash-chart-wrap"><canvas id="chart-source"></canvas></div>
+      </div>
+      <div class="dash-chart-card">
+        <div class="dash-chart-title">Candidates by Location</div>
+        <div class="dash-chart-wrap"><canvas id="chart-location"></canvas></div>
+      </div>
+    </div>
+
+    <div class="dash-footer" id="dash-footer"></div>
   </div>
 </div>
 
@@ -527,7 +663,7 @@ select.form-control{cursor:pointer}
 
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────────────────
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw1hnsvRwg9MwUqaLxpke6N93BjQ8v6diqF59k4gIPCUa6Awcsohnp-HOnRPR7AXXyD1Q/exec';
+const APPS_SCRIPT_URL = 'YOUR_APPS_SCRIPT_URL_HERE';
 
 const USERS = {
   matt:   'Matt Glover',
@@ -604,6 +740,7 @@ function renderAll() {
   renderPipeline();
   renderAdmin();
   populateMassJobDropdown();
+  renderDashboard();
 }
 
 // ── DROPDOWNS ─────────────────────────────────────────────────────────────────
@@ -1081,6 +1218,7 @@ function showPage(name, el) {
   document.getElementById('page-' + name).classList.add('visible');
   el.classList.add('active');
   if (name === 'massadd') populateMassJobDropdown();
+  if (name === 'dashboard') renderDashboard();
 }
 
 // ── JSONP ─────────────────────────────────────────────────────────────────────
@@ -1123,6 +1261,214 @@ function fmtDate(d) {
   } catch(e) {}
   return '';
 }
+
+// ── DASHBOARD ─────────────────────────────────────────────────────────────────
+const STAGE_ORDER = ['Resume Review','Phone Screen','1st Interview','Verbal Offer','Written Offer','Offer Accepted'];
+let _charts = {};
+
+function renderDashboard() {
+  const jobs  = state.jobs;
+  const cands = state.candidates;
+  const today = new Date();
+
+  // ── KPIs ──
+  const hired    = cands.filter(c => c.currentStage === 'Offer Accepted').length;
+  const openJobs = jobs.filter(j => j.status !== 'Hired').length;
+
+  // Avg days to hire (resume received → offer accepted)
+  const hireDays = cands
+    .filter(c => c.currentStage === 'Offer Accepted' && c.dateResumeReceived && c.offerDecisionDate)
+    .map(c => Math.round((new Date(c.offerDecisionDate) - new Date(c.dateResumeReceived)) / 86400000));
+  const avgDays = hireDays.length ? (hireDays.reduce((a,b)=>a+b,0)/hireDays.length).toFixed(1) : '—';
+
+  set('d-total-cands', cands.length);
+  set('d-total-cands-sub', `across ${[...new Set(cands.map(c=>c.position))].length} position types`);
+  set('d-hired', hired);
+  set('d-hired-sub', `of ${jobs.length} total openings`);
+  set('d-open', openJobs);
+  set('d-open-sub', `${jobs.filter(j=>j.status==='Hold').length} on hold · ${jobs.filter(j=>j.status==='Active').length} active`);
+  set('d-days', avgDays === '—' ? '—' : avgDays);
+
+  // ── Conversion Metrics ──
+  const accepted = cands.filter(c => c.offerDecision === 'Accepted').length;
+  const declined = cands.filter(c => c.offerDecision === 'Declined').length;
+  const interviewed = cands.filter(c => c.firstInterviewDate).length;
+  const phoneScreened = cands.filter(c => c.phoneScreenDate).length;
+
+  const acceptRate = (accepted+declined) > 0 ? pct(accepted, accepted+declined) : '—';
+  set('d-accept-rate', acceptRate);
+  set('d-accept-detail', `${accepted} of ${accepted+declined} offers`);
+
+  set('d-res-int', cands.length ? pct(interviewed, cands.length) : '—');
+  set('d-res-int-detail', `${interviewed} of ${cands.length} applicants`);
+
+  set('d-int-hire', interviewed ? pct(hired, interviewed) : '—');
+  set('d-int-hire-detail', `${hired} hires from ${interviewed} interviews`);
+
+  const appsPerOpen = jobs.length ? (cands.length / jobs.length).toFixed(1) : '—';
+  set('d-apps-open', appsPerOpen);
+  set('d-apps-open-detail', `${cands.length} applicants / ${jobs.length} openings`);
+
+  // ── Position Summary Table ──
+  const jobRows = jobs.map(j => {
+    const jCands = cands.filter(c => c.position === j.positionTitle && c.location === j.location);
+    const stages = {
+      applied:   jCands.length,
+      phone:     jCands.filter(c => c.phoneScreenDate).length,
+      interview: jCands.filter(c => c.firstInterviewDate).length,
+      offered:   jCands.filter(c => c.verbalOfferDate || c.writtenOfferSent).length,
+      accepted:  jCands.filter(c => c.currentStage === 'Offer Accepted').length,
+    };
+    const statusClass = {Hold:'b-hold',Active:'b-active',Hired:'b-hired'}[j.status] || 'b-hold';
+    const numCell = n => `<td class="dash-num${n===0?' zero':''}">${n||'—'}</td>`;
+    return `<tr>
+      <td>${esc(j.positionTitle)}</td>
+      <td style="font-size:12px;color:var(--text-2)">${esc(j.location)}</td>
+      <td><span class="mono">${esc(reqId(j))}</span></td>
+      <td><span class="badge ${statusClass}">${esc(j.status)}</span></td>
+      <td style="font-size:12px;color:var(--text-3)">${fmtDate(j.requisitionDate)||'—'}</td>
+      ${numCell(stages.applied)}
+      ${numCell(stages.phone)}
+      ${numCell(stages.interview)}
+      ${numCell(stages.offered)}
+      ${numCell(stages.accepted)}
+    </tr>`;
+  }).join('');
+
+  document.getElementById('dash-pos-table').innerHTML = `
+    <table class="dash-tbl">
+      <thead><tr>
+        <th>Position</th><th>Location</th><th>Req ID</th><th>Status</th><th>Req Date</th>
+        <th style="text-align:center">Applied</th>
+        <th style="text-align:center">Phone Screen</th>
+        <th style="text-align:center">Interview</th>
+        <th style="text-align:center">Offered</th>
+        <th style="text-align:center">Accepted</th>
+      </tr></thead>
+      <tbody>${jobRows || '<tr><td colspan="10" class="empty-state">No data</td></tr>'}</tbody>
+    </table>`;
+
+  // ── Active Pipeline Table ──
+  const active = cands
+    .filter(c => c.currentStage !== 'Resume Review')
+    .sort((a,b) => STAGE_ORDER.indexOf(b.currentStage) - STAGE_ORDER.indexOf(a.currentStage));
+
+  set('dash-active-count', `${active.length} candidate${active.length!==1?'s':''}`);
+
+  const stageClass = {
+    'Phone Screen':'s-phone','1st Interview':'s-interview',
+    'Verbal Offer':'s-offer','Written Offer':'s-written',
+    'Offer Accepted':'s-accepted','Offer Declined':'s-declined'
+  };
+
+  const activeRows = active.map(c => {
+    const start = c.dateResumeReceived ? new Date(c.dateResumeReceived) : null;
+    const days  = start ? Math.round((today - start) / 86400000) : null;
+    const job = jobs.find(j => j.positionTitle === c.position && j.location === c.location);
+    return `<tr>
+      <td><div class="cname">${esc(c.candidateName)}</div><div class="cloc">${esc(c.location)}</div></td>
+      <td style="font-size:12px;color:var(--text-2)">${esc(c.position)}</td>
+      <td><span class="mono">${job ? esc(reqId(job)) : '—'}</span></td>
+      <td><span class="s-badge ${stageClass[c.currentStage]||'s-resume'}">${esc(c.currentStage)}</span></td>
+      <td style="font-size:12px;color:var(--text-3)">${days !== null ? days + ' day' + (days!==1?'s':'') : '—'}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('dash-active-table').innerHTML = `
+    <table class="dash-tbl">
+      <thead><tr><th>Candidate</th><th>Position</th><th>Req ID</th><th>Current Stage</th><th>Days in Pipeline</th></tr></thead>
+      <tbody>${activeRows || '<tr><td colspan="5" class="empty-state">No candidates past resume review.</td></tr>'}</tbody>
+    </table>`;
+
+  // ── Charts ──
+  const COLORS = ['#52307C','#A67DC5','#6B9178','#B07D2A','#3D6B5E','#C0392B'];
+
+  // Pipeline counts
+  const stageCounts = STAGE_ORDER.map(s => cands.filter(c => c.currentStage === s).length);
+  dashChart('chart-pipeline', 'bar', STAGE_ORDER, [{
+    label: 'Candidates', data: stageCounts,
+    backgroundColor: COLORS, borderRadius: 6
+  }], {
+    indexAxis: 'y',
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#F3F0F7' } },
+      y: { grid: { display: false } }
+    }
+  });
+
+  // Openings by status
+  const statuses = ['Hold','Active','Hired'];
+  const statusCounts = statuses.map(s => jobs.filter(j=>j.status===s).length);
+  dashChart('chart-status', 'doughnut', statuses, [{
+    data: statusCounts,
+    backgroundColor: ['#B07D2A','#52307C','#3D6B5E'],
+    borderColor: '#fff', borderWidth: 2
+  }], {
+    plugins: { legend: { position: 'right', labels: { padding: 12, usePointStyle: true } } },
+    cutout: '58%'
+  });
+
+  // Sources
+  const sourceMap = {};
+  cands.forEach(c => { sourceMap[c.source||'Unknown'] = (sourceMap[c.source||'Unknown']||0) + 1; });
+  const srcLabels = Object.keys(sourceMap);
+  const srcData   = srcLabels.map(k => sourceMap[k]);
+  dashChart('chart-source', 'pie', srcLabels, [{
+    data: srcData,
+    backgroundColor: COLORS.slice(0, srcLabels.length),
+    borderColor: '#fff', borderWidth: 2
+  }], {
+    plugins: { legend: { position: 'right', labels: { padding: 12, usePointStyle: true } } }
+  });
+
+  // Candidates by location
+  const locMap = {};
+  cands.forEach(c => { if(c.location) locMap[c.location] = (locMap[c.location]||0) + 1; });
+  const locLabels = Object.keys(locMap).sort((a,b) => locMap[b]-locMap[a]);
+  const locData   = locLabels.map(k => locMap[k]);
+  dashChart('chart-location', 'bar', locLabels, [{
+    label: 'Candidates', data: locData,
+    backgroundColor: '#A67DC5', borderRadius: 6
+  }], {
+    indexAxis: 'y',
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#F3F0F7' } },
+      y: { grid: { display: false } }
+    }
+  });
+
+  // Footer
+  const now = new Date();
+  set('dash-footer', `Updated ${now.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})} at ${now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})} — Castlereagh Hiring Tracker`);
+  set('dash-subtitle', `As of ${now.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}`);
+}
+
+function dashChart(id, type, labels, datasets, extraOpts) {
+  if (_charts[id]) { _charts[id].destroy(); delete _charts[id]; }
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  _charts[id] = new Chart(ctx, {
+    type,
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      ...extraOpts
+    }
+  });
+}
+
+function set(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+function pct(n, d) {
+  return d ? (n/d*100).toFixed(1) + '%' : '—';
+}
+
 </script>
 </body>
 </html>
