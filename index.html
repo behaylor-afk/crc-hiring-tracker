@@ -664,7 +664,7 @@ select.form-control{cursor:pointer}
 
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────────────────
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxwFeDZc2QXNdkPt8qib3z_fVsXagtElHQjbtS7AgBu-N75ux7vmAqKq3xit6Remattgw/exec';
+const APPS_SCRIPT_URL = 'YOUR_APPS_SCRIPT_URL_HERE';
 
 const USERS = {
   matt:   'Matt Glover',
@@ -1064,8 +1064,8 @@ function parsePaste() {
   const rows = raw.split('\n').map(line => {
     const parts = line.split('\t');
     return {
-      name:  (parts[0]||'').trim(),
-      phone: (parts[1]||'').trim()
+      name:  (parts[0]||'').trim().replace(/^'+/, ''),
+      phone: (parts[1]||'').trim().replace(/^'+/, '')
     };
   }).filter(r => r.name);
 
