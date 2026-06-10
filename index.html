@@ -202,6 +202,21 @@ tr:hover td{background:var(--lavender-light)}
 .dash-num.zero { color: var(--text-3); font-weight: 400; font-size: 14px; }
 .dash-footer { text-align: center; padding: 12px; font-size: 11px; color: var(--text-3); border-top: 1px solid var(--border); }
 
+
+/* ── ACTIVITY ── */
+.act-tag{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+.act-add-cand{background:#EBF3EE;color:#3D6B5E}
+.act-update-cand{background:#EDE8F5;color:#52307C}
+.act-add-job{background:#FDF4E3;color:#B07D2A}
+.act-update-job{background:#FFF7ED;color:#C2410C}
+.act-bulk{background:#F3EDF9;color:#7B4FB5}
+.act-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px}
+.act-user-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
+.act-user-name{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;color:var(--accent);margin-bottom:12px}
+.act-user-stat{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--text-2)}
+.act-user-stat:last-child{border-bottom:none}
+.act-user-stat span{font-weight:700;color:var(--text)}
+
 /* ── TOAST ── */
 .toast{position:fixed;bottom:24px;right:24px;background:#1E1428;color:#fff;padding:12px 18px;border-radius:10px;font-size:13px;font-weight:500;z-index:999;transform:translateY(80px);opacity:0;transition:all .3s;pointer-events:none;max-width:320px}
 .toast.show{transform:translateY(0);opacity:1}
@@ -260,6 +275,7 @@ select.form-control{cursor:pointer}
     <button class="nav-tab" onclick="showPage('candidates',this)">Candidates</button>
     <button class="nav-tab" onclick="showPage('dashboard',this)">Dashboard</button>
     <button class="nav-tab" onclick="showPage('massadd',this)">Mass Add</button>
+    <button class="nav-tab" onclick="showPage('activity',this)">Activity</button>
     <button class="nav-tab" onclick="showPage('admin',this)">Admin</button>
   </div>
   <div class="nav-user">
@@ -503,6 +519,47 @@ select.form-control{cursor:pointer}
   </div>
 </div>
 
+<!-- ═══ ACTIVITY ═══ -->
+<div id="page-activity" class="page">
+  <div class="main">
+    <div class="page-header">
+      <div><div class="page-title">Activity Log</div><div class="page-sub">All edits and additions since go-live</div></div>
+      <button class="btn btn-ghost btn-sm" onclick="loadActivity()">↻ Refresh</button>
+    </div>
+
+    <div class="act-summary" id="act-summary">
+      <div class="stat-card"><div class="stat-label">Total Actions</div><div class="stat-value" id="act-total">—</div><div class="stat-sub">all time</div></div>
+      <div class="stat-card sage"><div class="stat-label">Matt Glover</div><div class="stat-value sage" id="act-matt">—</div><div class="stat-sub" id="act-matt-last">—</div></div>
+      <div class="stat-card lavender"><div class="stat-label">Amanda O'Dell</div><div class="stat-value lavender" id="act-amanda">—</div><div class="stat-sub" id="act-amanda-last">—</div></div>
+    </div>
+
+    <div class="filter-row" style="margin-bottom:14px">
+      <div class="filter-pills" id="act-user-pills">
+        <button class="pill active" onclick="filterActivity('user','all',this)">All Users</button>
+        <button class="pill" onclick="filterActivity('user','Matt Glover',this)">Matt Glover</button>
+        <button class="pill" onclick="filterActivity('user',%22Amanda O'Dell%22,this)">Amanda O'Dell</button>
+      </div>
+      <div class="filter-pills" id="act-type-pills" style="margin-left:8px">
+        <button class="pill active" onclick="filterActivity('type','all',this)">All Actions</button>
+        <button class="pill" onclick="filterActivity('type','Add Candidate',this)">Add Candidate</button>
+        <button class="pill" onclick="filterActivity('type','Bulk Add',this)">Bulk Add</button>
+        <button class="pill" onclick="filterActivity('type','Update Candidate',this)">Update Candidate</button>
+        <button class="pill" onclick="filterActivity('type','Add Job',this)">Add Job</button>
+        <button class="pill" onclick="filterActivity('type','Update Job',this)">Update Job</button>
+      </div>
+      <input class="search-box" placeholder="Search name…" oninput="filterActivity('query',this.value)" style="margin-left:auto">
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">All Activity</span>
+        <span id="act-count" style="font-size:12px;color:var(--text-3)"></span>
+      </div>
+      <div id="act-table-body"><div class="loading"><div class="spinner"></div> Loading…</div></div>
+    </div>
+  </div>
+</div>
+
 </div><!-- end #app -->
 
 <!-- ═══ JOB MODAL ═══ -->
@@ -664,7 +721,7 @@ select.form-control{cursor:pointer}
 
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────────────────
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby0RNc77rs0joX8uNhtNvsnsqbtvHounODyHYUJM7cYpWlWWtLbN-hPR_TlgMxuFsJSIA/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw8V0D86IvPWlaqSM5A30XqBUL0LQXLHhwhXK-yINBHCQ1AwzxGOId90RguFdTZZ3LTxA/exec';
 
 const USERS = {
   matt:   'Matt Glover',
@@ -1220,6 +1277,7 @@ function showPage(name, el) {
   el.classList.add('active');
   if (name === 'massadd') populateMassJobDropdown();
   if (name === 'dashboard') renderDashboard();
+  if (name === 'activity') loadActivity();
 }
 
 // ── JSONP ─────────────────────────────────────────────────────────────────────
@@ -1719,6 +1777,92 @@ new Chart(document.getElementById('c4'), {
 <\/script>
 </body>
 </html>`;
+}
+
+
+// ── ACTIVITY LOG ─────────────────────────────────────────────────────────────
+let activityData = [];
+let actFilter = { user: 'all', type: 'all', query: '' };
+
+function loadActivity() {
+  document.getElementById('act-table-body').innerHTML =
+    '<div class="loading"><div class="spinner"></div> Loading…</div>';
+  jsonp('getActivity', null, data => {
+    if (data.error) { showToast('Error: ' + data.error, 'error'); return; }
+    activityData = Array.isArray(data) ? data : [];
+    renderActivity();
+  });
+}
+
+function renderActivity() {
+  const af = actFilter;
+  let rows = activityData.filter(a => {
+    if (af.user !== 'all' && a.user !== af.user) return false;
+    if (af.type !== 'all' && a.action !== af.type) return false;
+    if (af.query && !a.recordName.toLowerCase().includes(af.query.toLowerCase()) &&
+        !a.user.toLowerCase().includes(af.query.toLowerCase())) return false;
+    return true;
+  });
+
+  // Summary stats (always from full data)
+  const all   = activityData;
+  const matt  = all.filter(a => a.user === 'Matt Glover');
+  const amanda= all.filter(a => a.user === "Amanda O'Dell");
+
+  document.getElementById('act-total').textContent  = all.length;
+  document.getElementById('act-matt').textContent   = matt.length;
+  document.getElementById('act-amanda').textContent = amanda.length;
+
+  const lastAct = arr => {
+    if (!arr.length) return 'No activity yet';
+    const d = arr[0].timestamp;
+    return d ? 'Last: ' + fmtDateTime(d) : '—';
+  };
+  document.getElementById('act-matt-last').textContent   = lastAct(matt);
+  document.getElementById('act-amanda-last').textContent = lastAct(amanda);
+  document.getElementById('act-count').textContent = `${rows.length} record${rows.length!==1?'s':''}`;
+
+  const tagClass = {
+    'Add Candidate':    'act-add-cand',
+    'Update Candidate': 'act-update-cand',
+    'Add Job':          'act-add-job',
+    'Update Job':       'act-update-job',
+    'Bulk Add':         'act-bulk',
+  };
+
+  const tableRows = rows.map(a => `<tr>
+    <td style="font-size:12px;color:var(--text-3);white-space:nowrap">${fmtDateTime(a.timestamp)}</td>
+    <td style="font-weight:600;font-size:13px">${esc(a.user)}</td>
+    <td><span class="act-tag ${tagClass[a.action]||''}">${esc(a.action)}</span></td>
+    <td style="font-size:13px">${esc(a.recordName)}</td>
+    <td style="font-size:12px;color:var(--text-3)">${esc(a.details)}</td>
+    <td style="font-size:11px;font-family:monospace;color:var(--text-3)">${esc(a.recordId)}</td>
+  </tr>`).join('');
+
+  document.getElementById('act-table-body').innerHTML = tableRows
+    ? `<table><thead><tr>
+        <th>Timestamp</th><th>User</th><th>Action</th><th>Record</th><th>Details</th><th>ID</th>
+       </tr></thead><tbody>${tableRows}</tbody></table>`
+    : '<div class="empty-state">No activity matches the current filter.</div>';
+}
+
+function filterActivity(key, val, btn) {
+  actFilter[key] = val;
+  if (btn) {
+    btn.closest('.filter-pills')?.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+  }
+  renderActivity();
+}
+
+function fmtDateTime(ts) {
+  if (!ts) return '—';
+  try {
+    const d = new Date(ts);
+    if (isNaN(d)) return ts;
+    return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) + ' ' +
+           d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+  } catch(e) { return ts; }
 }
 
 </script>
