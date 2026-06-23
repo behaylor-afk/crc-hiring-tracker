@@ -339,6 +339,13 @@ select.form-control{cursor:pointer}
       <select class="form-control" style="font-size:12px;padding:5px 10px;width:auto" id="cand-loc-filter" onchange="filterCands('location',this.value)">
         <option value="all">All Locations</option>
       </select>
+      <div class="filter-pills" id="cand-contact-pills">
+        <button class="pill active" onclick="filterCands('contact','all',this)">All Contacts</button>
+        <button class="pill" onclick="filterCands('contact','Reached',this)">Reached</button>
+        <button class="pill" onclick="filterCands('contact','No Answer',this)">No Answer</button>
+        <button class="pill" onclick="filterCands('contact','Left Voicemail',this)">Left Voicemail</button>
+        <button class="pill" onclick="filterCands('contact','__blank__',this)">Not Contacted</button>
+      </div>
       <input class="search-box" placeholder="Search name…" oninput="filterCands('query',this.value)" id="cand-search">
     </div>
     <div class="card">
@@ -721,7 +728,7 @@ select.form-control{cursor:pointer}
 
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────────────────
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzbgwHtVyyDDTci3cnzSglhD4ucPih4tIsd9ETHSZ8ZUCl8q6Ik_IXegnAtOgJ5fWlObg/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx8sjwutriKiJgPqUSGIUMnSr44DbUZI51wzyMum8s8bZNMSr9X6OHc4VVOjvICYD2_og/exec';
 
 const USERS = {
   matt:    'Matt Glover',
@@ -737,7 +744,7 @@ let state = {
   jobs: [],
   candidates: [],
   jobFilter: { status:'all', location:'all' },
-  candFilter: { screen:'all', position:'all', location:'all', stage:'all', query:'' },
+  candFilter: { screen:'all', position:'all', location:'all', stage:'all', contact:'all', query:'' },
   massRows: []
 };
 
@@ -951,6 +958,8 @@ function renderCandidates() {
     if (cf.position !== 'all' && c.position !== cf.position) return false;
     if (cf.location !== 'all' && c.location !== cf.location) return false;
     if (cf.stage !== 'all' && c.currentStage !== cf.stage) return false;
+    if (cf.contact === '__blank__' && c.attemptedContactResult) return false;
+    if (cf.contact !== 'all' && cf.contact !== '__blank__' && c.attemptedContactResult !== cf.contact) return false;
     if (cf.query && !c.candidateName.toLowerCase().includes(cf.query.toLowerCase())) return false;
     return true;
   });
@@ -971,6 +980,8 @@ function renderCandidates() {
     <td><span class="mono">${esc(c.position)}</span></td>
     <td style="font-size:12px;color:var(--text-3)">${esc(c.source)}</td>
     <td>${c.resumeScreenResult ? `<span class="badge b-${c.resumeScreenResult.toLowerCase()}">${esc(c.resumeScreenResult)}</span>` : '<span style="color:var(--text-3);font-size:12px">—</span>'}</td>
+    <td style="font-size:12px;color:var(--text-3)">${fmtDate(c.attemptedContactDate)||'—'}</td>
+    <td>${c.attemptedContactResult ? `<span class="badge ${contactBadge(c.attemptedContactResult)}">${esc(c.attemptedContactResult)}</span>` : '<span style="color:var(--text-3);font-size:12px">—</span>'}</td>
     <td><span class="s-badge ${stageClass[c.currentStage]||'s-resume'}">${esc(c.currentStage)}</span></td>
     <td style="font-size:12px;color:var(--text-3)">${fmtDate(c.createdAt)||'—'}</td>
     <td style="font-size:11px;color:var(--text-3)">${esc(c.createdBy)}</td>
@@ -980,7 +991,7 @@ function renderCandidates() {
   document.getElementById('cands-table-body').innerHTML = `
     <table><thead><tr>
       <th>Candidate</th><th>Phone</th><th>Position</th><th>Source</th>
-      <th>Resume</th><th>Current Stage</th><th>Added</th><th>By</th><th></th>
+      <th>Resume</th><th>Contact Date</th><th>Contact Result</th><th>Current Stage</th><th>Added</th><th>By</th><th></th>
     </tr></thead><tbody>${rows}</tbody></table>`;
 }
 
@@ -1304,6 +1315,16 @@ function showToast(msg, type='') {
 }
 
 // ── UTILS ─────────────────────────────────────────────────────────────────────
+
+function contactBadge(result) {
+  const map = {
+    'Reached':       'b-qualified',
+    'No Answer':     'b-hold',
+    'Left Voicemail':'b-ongoing',
+  };
+  return map[result] || 'b-ongoing';
+}
+
 function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
