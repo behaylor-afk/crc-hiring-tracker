@@ -747,7 +747,7 @@ select.form-control{cursor:pointer}
 
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────────────────
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxJfHiIJ169oiEyvTv1m0WSBjaWqed_i5ISgtjWrJqZ_x9apURHcv-5LOhDrW6J5Y1IAw/exec';
+const APPS_SCRIPT_URL = 'YOUR_APPS_SCRIPT_URL_HERE';
 
 const USERS = {
   matt:    'Matt Glover',
@@ -1004,9 +1004,9 @@ function renderCandidates() {
     <td><span class="s-badge ${stageClass[c.currentStage]||'s-resume'}">${esc(c.currentStage)}</span></td>
     <td style="font-size:12px;color:var(--text-3)">${fmtDate(c.createdAt)||'—'}</td>
     <td style="font-size:11px;color:var(--text-3)">${esc(c.createdBy)}</td>
-    <td style="white-space:nowrap;display:flex;gap:5px">
+    <td style="white-space:nowrap">
       <button class="action-btn" onclick="openCandidateModal('${esc(c.id)}')">Update</button>
-      <button class="action-btn action-btn-danger" onclick="confirmDelete('candidate','${esc(c.id)}','${esc(c.candidateName)}')">Delete</button>
+      <button class="action-btn action-btn-danger" style="margin-left:4px" onclick="confirmDelete('candidate','${esc(c.id)}','${esc(c.candidateName)}')">Delete</button>
     </td>
   </tr>`).join('');
 
