@@ -567,6 +567,25 @@ select.form-control{cursor:pointer}
   </div>
 </div>
 
+<!-- ═══ CONFIRM DELETE MODAL ═══ -->
+<div class="overlay" id="confirm-overlay">
+  <div class="modal" style="max-width:420px" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title" style="color:var(--red)" id="confirm-title">Confirm Delete</div>
+      <button class="modal-close" onclick="closeModal('confirm-overlay')">✕</button>
+    </div>
+    <div class="modal-body" style="padding:20px 22px">
+      <p style="font-size:14px;color:var(--text);line-height:1.6" id="confirm-message"></p>
+      <p style="font-size:12px;color:var(--text-3);margin-top:10px">This cannot be undone.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('confirm-overlay')">Cancel</button>
+      <button class="btn" style="background:var(--red);color:#fff;box-shadow:0 2px 8px rgba(192,57,43,.25)"
+              id="confirm-delete-btn" onclick="confirmDeleteExecute()">Delete</button>
+    </div>
+  </div>
+</div>
+
 </div><!-- end #app -->
 
 <!-- ═══ JOB MODAL ═══ -->
@@ -728,7 +747,7 @@ select.form-control{cursor:pointer}
 
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────────────────
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx8sjwutriKiJgPqUSGIUMnSr44DbUZI51wzyMum8s8bZNMSr9X6OHc4VVOjvICYD2_og/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxJfHiIJ169oiEyvTv1m0WSBjaWqed_i5ISgtjWrJqZ_x9apURHcv-5LOhDrW6J5Y1IAw/exec';
 
 const USERS = {
   matt:    'Matt Glover',
@@ -908,7 +927,7 @@ function renderJobs() {
       <td><span class="badge b-${j.status.toLowerCase()}">${esc(j.status)}</span></td>
       <td style="font-size:12px;color:var(--text-3)">${candCount}</td>
       <td style="font-size:11px;color:var(--text-3)">${esc(j.createdBy)}</td>
-      <td><button class="action-btn" onclick="openJobModal('${esc(j.id)}')">Edit</button></td>
+      <td style="white-space:nowrap"><button class="action-btn" onclick="openJobModal('${esc(j.id)}')">Edit</button> <button class="action-btn action-btn-danger" onclick="confirmDelete('job','${esc(j.id)}','${esc(j.positionTitle)}')">Delete</button></td>
     </tr>`;
   }).join('');
 
@@ -985,7 +1004,10 @@ function renderCandidates() {
     <td><span class="s-badge ${stageClass[c.currentStage]||'s-resume'}">${esc(c.currentStage)}</span></td>
     <td style="font-size:12px;color:var(--text-3)">${fmtDate(c.createdAt)||'—'}</td>
     <td style="font-size:11px;color:var(--text-3)">${esc(c.createdBy)}</td>
-    <td><button class="action-btn" onclick="openCandidateModal('${esc(c.id)}')">Update</button></td>
+    <td style="white-space:nowrap;display:flex;gap:5px">
+      <button class="action-btn" onclick="openCandidateModal('${esc(c.id)}')">Update</button>
+      <button class="action-btn action-btn-danger" onclick="confirmDelete('candidate','${esc(c.id)}','${esc(c.candidateName)}')">Delete</button>
+    </td>
   </tr>`).join('');
 
   document.getElementById('cands-table-body').innerHTML = `
@@ -1851,6 +1873,8 @@ function renderActivity() {
     'Add Job':          'act-add-job',
     'Update Job':       'act-update-job',
     'Bulk Add':         'act-bulk',
+    'Delete Job':       'act-update-job',
+    'Delete Candidate': 'act-update-cand',
   };
 
   const tableRows = rows.map(a => `<tr>
@@ -1886,6 +1910,40 @@ function fmtDateTime(ts) {
     return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) + ' ' +
            d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
   } catch(e) { return ts; }
+}
+
+
+// ── DELETE CONFIRMATION ───────────────────────────────────────────────────────
+let _pendingDelete = null;
+
+function confirmDelete(type, id, name) {
+  _pendingDelete = { type, id, name };
+  const typeLabel = type === 'job' ? 'job opening' : 'candidate';
+  document.getElementById('confirm-title').textContent   = 'Delete ' + (type === 'job' ? 'Job Opening' : 'Candidate');
+  document.getElementById('confirm-message').textContent =
+    'Are you sure you want to delete ' + typeLabel + ': "' + name + '"? All associated data will be permanently removed.';
+  openModal('confirm-overlay');
+}
+
+function confirmDeleteExecute() {
+  if (!_pendingDelete) return;
+  const { type, id, name } = _pendingDelete;
+  const btn = document.getElementById('confirm-delete-btn');
+  btn.textContent = 'Deleting…';
+  btn.disabled = true;
+
+  const action  = type === 'job' ? 'deleteJob' : 'deleteCandidate';
+  const payload = { id, recordName: name, deletedBy: state.user.name };
+
+  jsonp(action, payload, data => {
+    btn.textContent = 'Delete';
+    btn.disabled = false;
+    closeModal('confirm-overlay');
+    _pendingDelete = null;
+    if (data.error) { showToast('Error: ' + data.error, 'error'); return; }
+    showToast((type === 'job' ? 'Job opening' : 'Candidate') + ' deleted.', 'success');
+    loadData();
+  });
 }
 
 </script>
